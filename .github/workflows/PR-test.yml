@@ -1,0 +1,77 @@
+name: Deploy ADF ARM Template
+
+on:
+  push:
+    branches:
+      - main  # Only trigger when code is pushed (i.e., merged) to main
+  workflow_dispatch:  # Allow manual run (optional, for flexibility)
+
+jobs:
+  deploy-adf-test:
+    runs-on: ubuntu-latest
+
+    environment:
+      name: test
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          ref: adf_publish  # Deploy from main
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          Secrets: ${{ secrets.AZURE_SECRETS }}
+          client-id: ${{ secrets.AZURE_CLIENT}}
+          
+      - name: Deploy ADF ARM Template
+        uses: azure/arm-deploy@v1
+        with:
+          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
+          TenantID: ${{ secrets.AZURE_TENANT }}
+          resourceGroupName: rg-test
+
+
+
+      - name: Deploy Azure Data Factory (Test)
+        run: |
+             ADF_SUBFOLDER_NAME="dev-adf-vikash" # The name of your DEV ADF instance
+             ADF_ARM_TEMPLATE_PATH="${{ github.workspace }}/adf_publish_repo/${ADF_SUBFOLDER_NAME}/ARMTemplateForFactory.json"
+             ADF_ARM_PARAMETERS_PATH="${{ github.workspace }}/adf_publish_repo/${ADF_SUBFOLDER_NAME}/ARMTemplateParametersForFactory.json" # Now modified!
+
+             echo "Attempting to deploy from: $ADF_ARM_TEMPLATE_PATH"
+             echo "Starting incremental deployment to Test ADF: ${{ env.ADF_NAME_TEST }} for release ${{ env.RELEASE_TAG }}"
+        
+             az deployment group create \
+             --resource-group ${{ env.ADF_RESOURCE_GROUP_TEST }} \
+             --template-file "$ADF_ARM_TEMPLATE_PATH" \
+             --parameters "$ADF_ARM_PARAMETERS_PATH" \
+             --name "ADF-Test-Release-${{ env.RELEASE_TAG }}-${{ github.run_number }}" \
+             --mode Incremental
+
+             - name: Post-Deployment Steps (Test)
+               run: |
+              echo "Test deployment for release ${{ env.RELEASE_TAG }} completed successfully!"
+          
+              template: ./dev-adf-vikash/ARMTemplateForFactory.json
+              parameters: ./dev-adf-vikash/ARMTemplateParametersForFactory.json
+              deploymentName: adf-deployment-${{ github.run_number }}
+          
+      - name: ✅ Comment if Success
+        if: success()
+        uses: actions/github-script@v7
+        with:
+           script: |
+            const msgSuccess = "✅ ADF Deployment succeeded!";
+            const msgSkipped = "ℹ️ Deployment succeeded";
+         
+            if (context.payload.pull_request) {
+            github.rest.issues.createComment({
+             issue_number: context.payload.pull_request.number,
+              owner: context.repo.owner,
+               repo: context.repo.repo,
+                body: msgSuccess
+                });
+                 } else {
+                  console.log(msgSkipped);
+                  }
