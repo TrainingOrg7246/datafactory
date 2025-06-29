@@ -1,9 +1,0 @@
-{
-	"name": "dev-adf-vikash",
-	"location": "eastus",
-	"identity": {
-		"type": "SystemAssigned",
-		"principalId": "89016ee5-d865-4898-a3e8-ebf67ec3084d",
-		"tenantId": "dec0438e-62ca-4889-a1fe-47c572683bff"
-	}
-}
