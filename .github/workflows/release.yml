@@ -24,7 +24,7 @@ jobs:
         with:
           subscriptionId: ${{ fromJson(secrets.AZURE_CREDENTIALS_TEST).subscriptionId }}
           resourceGroupName: ${{ secrets.ADF_RESOURCE_GROUP_TEST }}
-          template: ./dev-adf-vikash/ARMTemplate.json
+          template: ./dev-adf-vikash/ARMTemplateForFactory.json
           parameters: ./dev-adf-vikash/ARMTemplateParametersForFactory.json
           deploymentName: adf-deploy-test
           scope: resourcegroup
