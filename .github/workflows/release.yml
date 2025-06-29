@@ -37,8 +37,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        ref: adf_publish
-
       - name: Login to Azure (PROD)
         uses: azure/login@v1
         with:
