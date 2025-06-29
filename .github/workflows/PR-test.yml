@@ -1,4 +1,4 @@
-name: Deploy ADF to Production
+name: Deploy ADF to test
 
 on:
   release:
@@ -15,17 +15,14 @@ jobs:
       uses: actions/checkout@v3
       with:
         ref: main
-
     - name: Log in to Azure
       uses: azure/login@v1
-
+      with:
+              creds: ${{ secrets.AZURE_CREDENTIALS }}
     - name: Deploy ADF ARM Template
       uses: azure/arm-deploy@v1
       with:
         subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
-        ClientID: ${{ secrets.AZURE_CLIENT}}
-        TenantID: ${{ secrets.AZURE_TENANT}}
-        Secrets: ${{ secrets.AZURE_SECRETS}}
         
         resourceGroupName: rg-test
         template: ./dev-adf-vikash/ARMTemplateForFactory.json
