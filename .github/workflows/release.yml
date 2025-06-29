@@ -24,8 +24,8 @@ jobs:
         with:
           subscriptionId: ${{ fromJson(secrets.AZURE_CREDENTIALS_TEST).subscriptionId }}
           resourceGroupName: ${{ secrets.ADF_RESOURCE_GROUP_TEST }}
-          template: ./dev-adf-vikash/ARMTemplateForFactory.json
-          parameters: ./dev-adf-vikash/ARMTemplateParametersForFactory.json
+          template: ./home/runner/work/datafactory/datafactory/dev-adf-vikash/ARMTemplateForFactory.json
+          parameters: ./home/runner/work/datafactory/datafactory/dev-adf-vikash/ARMTemplateParametersForFactory.json
           deploymentName: adf-deploy-test
           scope: resourcegroup
           failOnStdErr: false
@@ -49,8 +49,8 @@ jobs:
         with:
           subscriptionId: ${{ fromJson(secrets.AZURE_CREDENTIALS_PROD).subscriptionId }}
           resourceGroupName: ${{ secrets.ADF_RESOURCE_GROUP_PROD }}
-          template: ./dev-adf-vikash/ARMTemplate.json
-          parameters: ./dev-adf-vikash/ARMTemplateParametersForFactory.json
+          template: ./home/runner/work/datafactory/datafactory/dev-adf-vikash/ARMTemplateForFactory.json
+          parameters: ./home/runner/work/datafactory/datafactory/dev-adf-vikash/ARMTemplateParametersForFactory.json
           deploymentName: adf-deploy-prod
           scope: resourcegroup
           failOnStdErr: false
