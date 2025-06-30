@@ -1,0 +1,98 @@
+# .github/workflows/release-prod-adf.yml
+name: ADF Prod Deployment Pipeline
+
+on:
+  release:
+    types: [published] # Triggers when a new release is published
+
+env:
+  # General Environment Variables - ADJUST THESE TO YOUR ACTUAL ADF NAMES AND RESOURCE GROUPS
+  ADF_RESOURCE_GROUP_PROD: 'rg-prod'       # Your Prod ADF Resource Group (e.g., 'your-prod-rg')
+  ADF_NAME_PROD: 'prod-adf-vikash'            # Your Prod ADF Name (The ACTUAL name of your Prod ADF instance) (e.g., 'your-prod-adf')
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }} # Assuming same subscription ID for simplicity, or provide a separate secret if needed
+  
+  RELEASE_TAG: ${{ github.ref_name }} # The name of the published release tag (e.g., v1.0.0)
+
+permissions:
+  id-token: write # Required for OpenID Connect (OIDC) authentication
+  contents: read  # Required to checkout the repository code
+
+jobs:
+  deploy-prod:
+    name: Deploy to PROD
+    runs-on: ubuntu-latest
+    needs: deploy-test # This ensures the 'deploy-test' job completes successfully first
+    environment: prod  # Links to your 'prod' GitHub environment for secrets and protection rules
+
+    steps:
+    - name: Checkout adf_publish branch for ARM templates
+      uses: actions/checkout@v4
+      with:
+        ref: adf_publish       # Specifies the branch where your ADF publishes its ARM templates
+        path: adf_publish_repo # Clones the branch content into this directory
+
+    - name: Prepare ARM Template Parameters for Prod Environment
+      run: |
+        # ADF_SUBFOLDER_NAME is the name of your DEV ADF instance where the templates were initially generated.
+        # This structure is typical for ADF CI/CD.
+        ADF_SUBFOLDER_NAME="dev-adf-vikash" 
+        BASE_PARAMS_FILE="${{ github.workspace }}/adf_publish_repo/${ADF_SUBFOLDER_NAME}/ARMTemplateParametersForFactory.json"
+        TEMP_PARAMS_FILE="${{ github.workspace }}/adf_publish_repo/${ADF_SUBFOLDER_NAME}/ARMTemplateParametersForFactory.temp.json"
+        
+        # Install jq if not present (jq is a lightweight and flexible command-line JSON processor)
+        # It's usually available on ubuntu-latest runners, but this ensures it.
+        sudo apt-get update && sudo apt-get install -y jq
+        
+        # Modify the 'factoryName' parameter in the ARMTemplateParametersForFactory.json file.
+        # This is crucial to ensure the deployment targets the correct ADF instance in the Prod environment.
+        jq --arg new_adf_name "${{ env.ADF_NAME_PROD }}" \
+           '.parameters.factoryName.value = $new_adf_name' \
+           "$BASE_PARAMS_FILE" > "$TEMP_PARAMS_FILE"
+        
+        # Overwrite the original parameters file with the modified one.
+        mv "$TEMP_PARAMS_FILE" "$BASE_PARAMS_FILE"
+        echo "Modified ARMTemplateParametersForFactory.json for Prod environment. New ADF name: ${{ env.ADF_NAME_PROD }}"
+      
+    - name: Azure Login (Prod)
+      uses: azure/login@v1 # Uses the Azure login action for OIDC authentication
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID_PROD }}   # Client ID of your Azure AD App Registration for Prod
+        tenant-id: ${{ secrets.AZURE_TENANT_ID_PROD }}   # Your Azure Tenant ID for Prod
+        subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }} # Target Azure Subscription ID for deployment
+        # IMPORTANT: Ensure that the federated credentials are correctly configured in your Azure AD App Registration
+        # for AZURE_CLIENT_ID_PROD. The 'Subject' field in the federated credential MUST
+        # exactly match the format: 'repo:<ORG-NAME>/<REPO-NAME>:environment:prod' (case-sensitive for 'prod').
+
+    - name: Deploy Azure Data Factory (Prod)
+      run: |
+        # Define paths to the ARM template and parameters file
+        ADF_SUBFOLDER_NAME="dev-adf-vikash" # The name of your DEV ADF instance (where templates were generated)
+        ADF_ARM_TEMPLATE_PATH="${{ github.workspace }}/adf_publish_repo/${ADF_SUBFOLDER_NAME}/ARMTemplateForFactory.json"
+        ADF_ARM_PARAMETERS_PATH="${{ github.workspace }}/adf_publish_repo/${ADF_SUBFOLDER_NAME}/ARMTemplateParametersForFactory.json" # This file was modified in the previous step
+        
+        echo "Attempting to deploy ARM template from: $ADF_ARM_TEMPLATE_PATH"
+        echo "Starting incremental deployment to Prod ADF: ${{ env.ADF_NAME_PROD }} for release ${{ env.RELEASE_TAG }}"
+        
+        # Execute the Azure CLI command to deploy the ARM template
+        # --resource-group: The target resource group in Azure
+        # --template-file: Path to the main ARM template file
+        # --parameters: Path to the ARM parameters file (which has been modified for Prod)
+        # --name: A unique name for this deployment in Azure (includes release tag and run number for traceability)
+        # --mode Incremental: Ensures that only changes are applied and existing resources not in the template are not deleted.
+        az deployment group create \
+          --resource-group ${{ env.ADF_RESOURCE_GROUP_PROD }} \
+          --template-file "$ADF_ARM_TEMPLATE_PATH" \
+          --parameters "$ADF_ARM_PARAMETERS_PATH" \
+          --name "ADF-Prod-Release-${{ env.RELEASE_TAG }}-${{ github.run_number }}" \
+          --mode Incremental 
+
+    - name: Post-Deployment Steps (Prod)
+      run: |
+        echo "Prod deployment for release ${{ env.RELEASE_TAG }} completed successfully!"
+    
+    - name: Upload Prod Deployment Artifacts (Optional)
+      uses: actions/upload-artifact@v4 # Uploads the deployed templates as an artifact for review/auditing
+      with:
+        name: adf-arm-templates-prod-${{ env.RELEASE_TAG }} # Unique name for the artifact
+        path: adf_publish_repo/dev-adf-vikash/              # Path to the deployed template files
+        retention-days: 7                                  # How long to retain the artifact
