@@ -10,8 +10,21 @@ jobs:
     name: Deploy to TEST
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      # Step 1: Checkout the ADF Publish Branch
+      - name: Checkout ADF Publish Branch
         uses: actions/checkout@v4
+        with:
+          ref: adf_publish # This is crucial! Checkout the branch where ADF publishes its ARM templates
+          path: adf_published_artifacts # This will put the content into a folder named adf_published_artifacts
+
+      # Debugging step (keep this for now)
+      - name: Debug - List files in adf_published_artifacts
+        run: |
+          echo "Listing contents of: ${{ github.workspace }}/adf_published_artifacts"
+          ls -R "${{ github.workspace }}/adf_published_artifacts" || echo "adf_published_artifacts not found or empty"
+          echo "Listing contents of: ${{ github.workspace }}/adf_published_artifacts/dev-adf-vikash"
+          ls -R "${{ github.workspace }}/adf_published_artifacts/dev-adf-vikash" || echo "dev-adf-vikash not found or empty"
+        continue-on-error: true
 
       - name: Login to Azure (TEST)
         uses: azure/login@v1
@@ -19,40 +32,58 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS_TEST }}
 
       - name: Prepare ARM Template Parameters for Test Environment
-        id: prepare_params_test # Add an ID to reference outputs
+        id: prepare_params_test
         run: |
-          ADF_SUBFOLDER_NAME="dev-adf-vikash" # The name of your DEV ADF instance (where templates were generated)
-          # Assuming the generated ARM template is ARMTemplateForFactory.json and parameters are ARMTemplateParametersForFactory.json
-          ADF_TEMPLATE_PATH="${{ github.workspace }}/adf_publish_repo/${ADF_SUBFOLDER_NAME}/ARMTemplateForFactory.json"
-          ADF_PARAMETERS_PATH="${{ github.workspace }}/adf_publish_repo/${ADF_SUBFOLDER_NAME}/ARMTemplateParametersForFactory.json"
-          
-          # You might want to modify the parameters file for the specific environment (TEST/PROD) here.
-          # For example, if you have environment-specific values for certain parameters:
-          # cat "$ADF_PARAMETERS_PATH" | jq '.parameters.paramName.value = "testValue"' > "$ADF_PARAMETERS_PATH.temp"
-          # mv "$ADF_PARAMETERS_PATH.temp" "$ADF_PARAMETERS_PATH"
+          ADF_SUBFOLDER_NAME="dev-adf-vikash" # This is usually the name of your Data Factory instance
+          # Adjust path based on the `path` specified in the checkout step
+          ADF_TEMPLATE_PATH="${{ github.workspace }}/adf_published_artifacts/${ADF_SUBFOLDER_NAME}/ARMTemplateForFactory.json"
+          ADF_PARAMETERS_PATH="${{ github.workspace }}/adf_published_artifacts/${ADF_SUBFOLDER_NAME}/ARMTemplateParametersForFactory.json"
+
+          # Validate existence of files before setting outputs (optional, but good practice)
+          if [ ! -f "$ADF_TEMPLATE_PATH" ]; then
+            echo "Error: ARM template not found at $ADF_TEMPLATE_PATH"
+            exit 1
+          fi
+          if [ ! -f "$ADF_PARAMETERS_PATH" ]; then
+            echo "Error: ARM parameters file not found at $ADF_PARAMETERS_PATH"
+            exit 1
+          fi
 
           echo "::set-output name=template_path::$ADF_TEMPLATE_PATH"
           echo "::set-output name=parameters_path::$ADF_PARAMETERS_PATH"
-          echo "Deployment name will be adf-deploy-test" # This is just a log, not an output for the next step
 
       - name: Deploy ADF ARM Template to TEST
         uses: azure/arm-deploy@v1
         with:
           subscriptionId: ${{ fromJson(secrets.AZURE_CREDENTIALS_TEST).subscriptionId }}
           resourceGroupName: ${{ secrets.ADF_RESOURCE_GROUP_TEST }}
-          template: ${{ steps.prepare_params_test.outputs.template_path }} # Use the output from the previous step
-          parameters: ${{ steps.prepare_params_test.outputs.parameters_path }} # Use the output from the previous step
-          deploymentName: adf-deploy-test # This should be a direct input to the action
-          scope: resourcegroup # This should be a direct input to the action
-          failOnStdErr: false # This should be a direct input to the action
+          template: ${{ steps.prepare_params_test.outputs.template_path }}
+          parameters: ${{ steps.prepare_params_test.outputs.parameters_path }}
+          deploymentMode: Incremental # Or Complete, depending on your needs. Incremental is safer.
+          deploymentName: adf-deploy-test
+          scope: resourcegroup
+          failOnStdErr: false
 
   deploy-prod:
     name: Deploy to PROD
     needs: deploy-test
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      # Step 1: Checkout the ADF Publish Branch for PROD job as well
+      - name: Checkout ADF Publish Branch
         uses: actions/checkout@v4
+        with:
+          ref: adf_publish # Crucial for PROD as well
+          path: adf_published_artifacts
+
+      # Debugging step (keep this for now)
+      - name: Debug - List files in adf_published_artifacts (PROD)
+        run: |
+          echo "Listing contents of: ${{ github.workspace }}/adf_published_artifacts"
+          ls -R "${{ github.workspace }}/adf_published_artifacts" || echo "adf_published_artifacts not found or empty"
+          echo "Listing contents of: ${{ github.workspace }}/adf_published_artifacts/dev-adf-vikash"
+          ls -R "${{ github.workspace }}/adf_published_artifacts/dev-adf-vikash" || echo "dev-adf-vikash not found or empty"
+        continue-on-error: true
 
       - name: Login to Azure (PROD)
         uses: azure/login@v1
@@ -60,20 +91,25 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS_PROD }}
 
       - name: Prepare ARM Template Parameters for Prod Environment
-        id: prepare_params_prod # Add an ID to reference outputs
+        id: prepare_params_prod
         run: |
-          ADF_SUBFOLDER_NAME="dev-adf-vikash" # The name of your DEV ADF instance (where templates were generated)
-          ADF_TEMPLATE_PATH="${{ github.workspace }}/adf_publish_repo/${ADF_SUBFOLDER_NAME}/ARMTemplateForFactory.json"
-          ADF_PARAMETERS_PATH="${{ github.workspace }}/adf_publish_repo/${ADF_SUBFOLDER_NAME}/ARMTemplateParametersForFactory.json"
-          
-          # Adjust parameters for PROD environment if necessary
-          # For example, if you have environment-specific values for certain parameters:
-          # cat "$ADF_PARAMETERS_PATH" | jq '.parameters.paramName.value = "prodValue"' > "$ADF_PARAMETERS_PATH.temp"
-          # mv "$ADF_PARAMETERS_PATH.temp" "$ADF_PARAMETERS_PATH"
+          ADF_SUBFOLDER_NAME="dev-adf-vikash"
+          ADF_TEMPLATE_PATH="${{ github.workspace }}/adf_published_artifacts/${ADF_SUBFOLDER_NAME}/ARMTemplateForFactory.json"
+          ADF_PARAMETERS_PATH="${{ github.workspace }}/adf_published_artifacts/${ADF_SUBFOLDER_NAME}/ARMTemplateParametersForFactory.json"
+
+          if [ ! -f "$ADF_TEMPLATE_PATH" ]; then
+            echo "Error: ARM template not found at $ADF_TEMPLATE_PATH"
+            exit 1
+          fi
+          if [ ! -f "$ADF_PARAMETERS_PATH" ]; then
+            echo "Error: ARM parameters file not found at $ADF_PARAMETERS_PATH"
+            exit 1
+          fi
+
+          # ... (your logic to modify PROD parameters if needed) ...
 
           echo "::set-output name=template_path::$ADF_TEMPLATE_PATH"
           echo "::set-output name=parameters_path::$ADF_PARAMETERS_PATH"
-          echo "Deployment name will be adf-deploy-prod"
 
       - name: Deploy ADF ARM Template to PROD
         uses: azure/arm-deploy@v1
@@ -82,6 +118,7 @@ jobs:
           resourceGroupName: ${{ secrets.ADF_RESOURCE_GROUP_PROD }}
           template: ${{ steps.prepare_params_prod.outputs.template_path }}
           parameters: ${{ steps.prepare_params_prod.outputs.parameters_path }}
+          deploymentMode: Incremental # Or Complete
           deploymentName: adf-deploy-prod
           scope: resourcegroup
           failOnStdErr: false
