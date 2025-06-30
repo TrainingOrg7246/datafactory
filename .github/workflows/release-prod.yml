@@ -12,16 +12,17 @@ on:
         description: 'ID of the successful Test deployment workflow run (to download artifacts from)'
         required: true
         type: string # This will be the run ID of the successful Test workflow
-      commit_sha:
-        description: 'Commit SHA from the successful Test deployment workflow run'
-        required: true
-        type: string # This will be the commit SHA used in the successful Test workflow
+      # No longer need commit_sha as we're using run_id for artifact name
+      # commit_sha:
+      #   description: 'Commit SHA from the successful Test deployment workflow run'
+      #   required: true
+      #   type: string 
 
 env:
   # General Environment Variables - ADJUST THESE TO YOUR ACTUAL ADF NAMES AND RESOURCE GROUPS
   ADF_RESOURCE_GROUP_PROD: 'rg-prod'       # Your Prod ADF Resource Group (e.g., 'your-prod-rg')
   ADF_NAME_PROD: 'prod-adf-vikash'            # Your Prod ADF Name (The ACTUAL name of your Prod ADF instance) (e.g., 'your-prod-adf')
-  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }} # Common subscription ID, or separate secrets if subscriptions differ
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }} 
   
   ADF_DEV_SUBFOLDER_NAME: "dev-adf-vikash" # The name of your DEV ADF instance (where templates were generated)
 
@@ -33,27 +34,22 @@ jobs:
   deploy-prod:
     name: Deploy to PROD
     runs-on: ubuntu-latest
-    # Removed 'needs: deploy-test' as it's in a separate workflow.
-    # The manual trigger and artifact download serve as the implicit dependency.
     environment: prod  # Links to your 'prod' GitHub environment for secrets and protection rules
-                       # Add protection rules here (e.g., Required reviewers) for the production gate.
 
     steps:
+    # --- MODIFIED STEP: Download Artifacts (Changed name to match upload) ---
     - name: Download ARM templates from Test workflow run
       uses: actions/download-artifact@v4
       with:
-        name: adf-arm-templates-${{ github.event.inputs.commit_sha }} # Name of the artifact to download
-        # Path where the artifact will be downloaded. This should match the path used in the 'checkout' for consistency.
+        name: adf-arm-templates-run-${{ github.event.inputs.test_workflow_run_id }} # Use run_id in the name
         path: adf_publish_repo/${{ env.ADF_DEV_SUBFOLDER_NAME }} 
-        # By default, downloads from current workflow run. To download from a specific run:
         run-id: ${{ github.event.inputs.test_workflow_run_id }}
-        repository: ${{ github.repository }} # Specify current repository
+        repository: ${{ github.repository }} 
 
     - name: Verify downloaded files
       run: |
         echo "Listing downloaded contents in adf_publish_repo/${{ env.ADF_DEV_SUBFOLDER_NAME }}:"
         ls -R adf_publish_repo/${{ env.ADF_DEV_SUBFOLDER_NAME }}
-        # Check if the expected files exist
         if [ ! -f "adf_publish_repo/${{ env.ADF_DEV_SUBFOLDER_NAME }}/ARMTemplateForFactory.json" ]; then
           echo "Error: ARMTemplateForFactory.json not found after download."
           exit 1
@@ -63,42 +59,35 @@ jobs:
           exit 1
         fi
 
-
     - name: Prepare ARM Template Parameters for Prod Environment
       run: |
-        # Define paths to the base parameters file
         BASE_PARAMS_FILE="adf_publish_repo/${{ env.ADF_DEV_SUBFOLDER_NAME }}/ARMTemplateParametersForFactory.json"
         TEMP_PARAMS_FILE="adf_publish_repo/${{ env.ADF_DEV_SUBFOLDER_NAME }}/ARMTemplateParametersForFactory.temp.json"
         
-        # Install jq (if not already present on the runner) for JSON manipulation
         sudo apt-get update && sudo apt-get install -y jq
         
-        # Modify the 'factoryName' parameter for the Prod environment.
         jq --arg new_adf_name "${{ env.ADF_NAME_PROD }}" \
            '.parameters.factoryName.value = $new_adf_name' \
            "$BASE_PARAMS_FILE" > "$TEMP_PARAMS_FILE"
         
-        # Overwrite the original parameters file with the modified one.
         mv "$TEMP_PARAMS_FILE" "$BASE_PARAMS_FILE"
         echo "Modified ARMTemplateParametersForFactory.json for Prod environment. New ADF name: ${{ env.ADF_NAME_PROD }}"
       
     - name: Azure Login (Prod)
-      uses: azure/login@v1 # Uses the Azure login action for OIDC authentication
+      uses: azure/login@v1 
       with:
-        client-id: ${{ secrets.AZURE_CLIENT_ID_PROD }}   # Client ID of your Azure AD App Registration for Prod
-        tenant-id: ${{ secrets.AZURE_TENANT_ID_PROD }}   # Your Azure Tenant ID for Prod
-        subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }} # Target Azure Subscription ID for deployment
+        client-id: ${{ secrets.AZURE_CLIENT_ID_PROD }}   
+        tenant-id: ${{ secrets.AZURE_TENANT_ID_PROD }}   
+        subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }} 
 
     - name: Deploy Azure Data Factory (Prod)
       run: |
-        # Define paths to the ARM template and parameters file
         ADF_ARM_TEMPLATE_PATH="adf_publish_repo/${{ env.ADF_DEV_SUBFOLDER_NAME }}/ARMTemplateForFactory.json"
         ADF_ARM_PARAMETERS_PATH="adf_publish_repo/${{ env.ADF_DEV_SUBFOLDER_NAME }}/ARMTemplateParametersForFactory.json" 
         
         echo "Attempting to deploy ARM template from: $ADF_ARM_TEMPLATE_PATH"
         echo "Starting incremental deployment to Prod ADF: ${{ env.ADF_NAME_PROD }} for release ${{ github.event.inputs.release_tag }}"
         
-        # Execute the Azure CLI command to deploy the ARM template
         az deployment group create \
           --resource-group ${{ env.ADF_RESOURCE_GROUP_PROD }} \
           --template-file "$ADF_ARM_TEMPLATE_PATH" \
