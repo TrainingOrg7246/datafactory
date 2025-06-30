@@ -1,0 +1,43 @@
+{
+	"name": "pl_forEach",
+	"properties": {
+		"activities": [
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@pipeline().parameters.Animal",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Wait1",
+							"type": "Wait",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"waitTimeInSeconds": 1
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"Animal": {
+				"type": "array",
+				"defaultValue": [
+					"Dog",
+					"Cat",
+					"Rat",
+					"Bird",
+					"Snake"
+				]
+			}
+		},
+		"annotations": []
+	}
+}
