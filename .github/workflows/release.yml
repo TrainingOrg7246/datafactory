@@ -22,21 +22,12 @@ jobs:
       - name: Deploy ADF ARM Template to TEST
         uses: azure/arm-deploy@v1
         with:
-          subscriptionId: ${{ fromJson(secrets.AZURE_CREDENTIALS_TEST).subscriptionId }}
-          resourceGroupName: ${{ secrets.ADF_RESOURCE_GROUP_TEST }}
-          ref: adf_publish
-          path: adf_publish_repo
-
-      - name: Prepare ARM Template Parameters for Test Environment
-        run: |
-             ADF_SUBFOLDER_NAME="dev-adf-vikash" # The name of your DEV ADF instance (where templates were generated)
-
-             BASE_PARAMS_FILE="${{ github.workspace }}/adf_publish_repo/${ADF_SUBFOLDER_NAME}/ARMTemplateParametersForFactory.json"
-             TEMP_PARAMS_FILE="${{ github.workspace }}/adf_publish_repo/${ADF_SUBFOLDER_NAME}/ARMTemplateParametersForFactory.temp.json"
-             deploymentName: adf-deploy-test
-             scope: resourcegroup
-             failOnStdErr: false
-
+    subscriptionId: ${{ fromJson(secrets.AZURE_CREDENTIALS_TEST).subscriptionId }}
+    resourceGroupName: ${{ secrets.ADF_RESOURCE_GROUP_TEST }}
+    template: adf_publish_repo/dev-adf-vikash/ARMTemplateForFactory.json
+    parameters: adf_publish_repo/dev-adf-vikash/ARMTemplateParametersForFactory.json
+    deploymentName: adf-deploy-test
+    scope: resourcegroup
   deploy-prod:
     name: Deploy to PROD
     needs: deploy-test
@@ -60,12 +51,12 @@ jobs:
           ref: adf_publish
           path: adf_publish_repo
 
-      - name: Prepare ARM Template Parameters for Test Environment
-        run: |
-             ADF_SUBFOLDER_NAME="dev-adf-vikash" # The name of your DEV ADF instance (where templates were generated)
-
-             BASE_PARAMS_FILE="${{ github.workspace }}/adf_publish_repo/${ADF_SUBFOLDER_NAME}/ARMTemplateParametersForFactory.json"
-             TEMP_PARAMS_FILE="${{ github.workspace }}/adf_publish_repo/${ADF_SUBFOLDER_NAME}/ARMTemplateParametersForFactory.temp.json"
-             deploymentName: adf-deploy-prod
-             scope: resourcegroup
-             failOnStdErr: false
+      - name: Deploy ADF ARM Template to Prod
+        uses: azure/arm-deploy@v1
+        with:
+    subscriptionId: ${{ fromJson(secrets.AZURE_CREDENTIALS_TEST).subscriptionId }}
+    resourceGroupName: ${{ secrets.ADF_RESOURCE_GROUP_TEST }}
+    template: adf_publish_repo/dev-adf-vikash/ARMTemplateForFactory.json
+    parameters: adf_publish_repo/dev-adf-vikash/ARMTemplateParametersForFactory.json
+    deploymentName: adf-deploy-test
+    scope: resourcegroup
