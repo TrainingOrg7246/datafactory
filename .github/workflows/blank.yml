@@ -1,0 +1,74 @@
+# .github/workflows/release-prod-adf.yml
+name: ADF Production Deployment Pipeline
+
+on:
+  workflow_dispatch: # Manual trigger (you can change this to on: release: if needed)
+
+env:
+  # General Environment Variables - SET THESE TO YOUR PROD VALUES
+  ADF_RESOURCE_GROUP_PROD: 'rg-prod'               # Your Production ADF Resource Group
+  ADF_NAME_PROD: 'prod-adf-vikash'                 # Your Production ADF Name
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  RELEASE_TAG: ${{ github.ref_name }}
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-prod:
+    runs-on: ubuntu-latest
+    environment: production # GitHub Environment for prod secrets
+    steps:
+    - name: Checkout adf_publish branch for ARM templates
+      uses: actions/checkout@v4
+      with:
+        ref: adf_publish
+        path: adf_publish_repo
+
+    - name: Prepare ARM Template Parameters for Prod Environment
+      run: |
+        ADF_SUBFOLDER_NAME="dev-adf-vikash"
+        BASE_PARAMS_FILE="${{ github.workspace }}/adf_publish_repo/${ADF_SUBFOLDER_NAME}/ARMTemplateParametersForFactory.json"
+        TEMP_PARAMS_FILE="${{ github.workspace }}/adf_publish_repo/${ADF_SUBFOLDER_NAME}/ARMTemplateParametersForFactory.temp.json"
+        
+        sudo apt-get update && sudo apt-get install -y jq
+        
+        jq --arg new_adf_name "${{ env.ADF_NAME_PROD }}" \
+           '.parameters.factoryName.value = $new_adf_name' \
+           "$BASE_PARAMS_FILE" > "$TEMP_PARAMS_FILE"
+        mv "$TEMP_PARAMS_FILE" "$BASE_PARAMS_FILE"
+        echo "Modified ARMTemplateParametersForFactory.json for Prod environment. New ADF name: ${{ env.ADF_NAME_PROD }}"
+
+    - name: Azure Login (Prod)
+      uses: azure/login@v1
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID_PROD }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID_PROD }}
+        subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+    - name: Deploy Azure Data Factory (Prod)
+      run: |
+        ADF_SUBFOLDER_NAME="dev-adf-vikash"
+        ADF_ARM_TEMPLATE_PATH="${{ github.workspace }}/adf_publish_repo/${ADF_SUBFOLDER_NAME}/ARMTemplateForFactory.json"
+        ADF_ARM_PARAMETERS_PATH="${{ github.workspace }}/adf_publish_repo/${ADF_SUBFOLDER_NAME}/ARMTemplateParametersForFactory.json"
+        
+        echo "Starting deployment to Production ADF: ${{ env.ADF_NAME_PROD }} for release ${{ env.RELEASE_TAG }}"
+        
+        az deployment group create \
+          --resource-group ${{ env.ADF_RESOURCE_GROUP_PROD }} \
+          --template-file "$ADF_ARM_TEMPLATE_PATH" \
+          --parameters "$ADF_ARM_PARAMETERS_PATH" \
+          --name "ADF-Prod-Release-${{ env.RELEASE_TAG }}-${{ github.run_number }}" \
+          --mode Incremental
+
+    - name: Post-Deployment Steps (Prod)
+      run: |
+        echo "Production deployment for release ${{ env.RELEASE_TAG }} completed successfully!"
+
+    - name: Upload Prod Deployment Artifacts (Optional)
+      uses: actions/upload-artifact@v4
+      with:
+        name: adf-prod-arm-templates-${{ env.RELEASE_TAG }}
+        path: adf_publish_repo/dev-adf-vikash/
+        retention-days: 7
