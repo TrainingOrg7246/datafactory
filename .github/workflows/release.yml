@@ -3,7 +3,7 @@ name: ADF Test Deployment Pipeline
 
 on:
   release:
-    types: [published] # Triggers when a new release is published
+    types: [published] # Triggers when a new GitHub Release is published
 
 env:
   # General Environment Variables - ADJUST THESE TO YOUR ACTUAL ADF NAMES AND RESOURCE GROUPS
@@ -11,76 +11,79 @@ env:
   ADF_NAME_TEST: 'test-adf-vikash'            # Your Test ADF Name (The ACTUAL name of your Test ADF instance)
   AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   
-  RELEASE_TAG: ${{ github.ref_name }}
+  RELEASE_TAG: ${{ github.ref_name }} # The name of the published release tag (e.g., v1.0.0)
+  ADF_DEV_SUBFOLDER_NAME: "dev-adf-vikash" # The name of your DEV ADF instance (where templates were generated)
 
 permissions:
   id-token: write # Required for OpenID Connect (OIDC) authentication
-  contents: read
+  contents: read  # Required to checkout the repository code
 
 jobs:
   deploy-test:
+    name: Deploy to TEST
     runs-on: ubuntu-latest
-    environment: test # Links to your 'Test' GitHub environment for secrets and protection rules
+    environment: test # Links to your 'test' GitHub environment for secrets and protection rules
+
     steps:
     - name: Checkout adf_publish branch for ARM templates
       uses: actions/checkout@v4
       with:
-        ref: adf_publish
-        path: adf_publish_repo
+        ref: adf_publish       # Specifies the branch where your ADF publishes its ARM templates
+        path: adf_publish_repo # Clones the branch content into this directory
 
     - name: Prepare ARM Template Parameters for Test Environment
       run: |
-        ADF_SUBFOLDER_NAME="dev-adf-vikash" # The name of your DEV ADF instance (where templates were generated)
-
-        BASE_PARAMS_FILE="${{ github.workspace }}/adf_publish_repo/${ADF_SUBFOLDER_NAME}/ARMTemplateParametersForFactory.json"
-        TEMP_PARAMS_FILE="${{ github.workspace }}/adf_publish_repo/${ADF_SUBFOLDER_NAME}/ARMTemplateParametersForFactory.temp.json"
+        # Define paths to the base parameters file
+        BASE_PARAMS_FILE="${{ github.workspace }}/adf_publish_repo/${{ env.ADF_DEV_SUBFOLDER_NAME }}/ARMTemplateParametersForFactory.json"
+        TEMP_PARAMS_FILE="${{ github.workspace }}/adf_publish_repo/${{ env.ADF_DEV_SUBFOLDER_NAME }}/ARMTemplateParametersForFactory.temp.json"
         
-        # Install jq if not present (usually available on ubuntu-latest)
+        # Install jq (if not already present on the runner) for JSON manipulation
         sudo apt-get update && sudo apt-get install -y jq
-
-        # Modify the ADF name parameter in the template parameters file
+        
+        # Modify the 'factoryName' parameter in the ARMTemplateParametersForFactory.json file.
+        # This is crucial to ensure the deployment targets the correct ADF instance in the Test environment.
         jq --arg new_adf_name "${{ env.ADF_NAME_TEST }}" \
            '.parameters.factoryName.value = $new_adf_name' \
            "$BASE_PARAMS_FILE" > "$TEMP_PARAMS_FILE"
-
-        # Overwrite the original parameters file with the modified one
+        
+        # Overwrite the original parameters file with the modified one.
         mv "$TEMP_PARAMS_FILE" "$BASE_PARAMS_FILE"
-
         echo "Modified ARMTemplateParametersForFactory.json for Test environment. New ADF name: ${{ env.ADF_NAME_TEST }}"
       
     - name: Azure Login (Test)
-      uses: azure/login@v1 # Or v2
+      uses: azure/login@v1 # Uses the Azure login action for OIDC authentication
       with:
-        client-id: ${{ secrets.AZURE_CLIENT_ID_TEST }}
-        tenant-id: ${{ secrets.AZURE_TENANT_ID_TEST }}
-        subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
-        # If you're still seeing auth errors here for Test, ensure the federated credentials
-        # are set up correctly on the Azure AD App Registration for AZURE_CLIENT_ID_TEST.
+        client-id: ${{ secrets.AZURE_CLIENT_ID_TEST }}   # Client ID of your Azure AD App Registration for Test
+        tenant-id: ${{ secrets.AZURE_TENANT_ID_TEST }}   # Your Azure Tenant ID for Test
+        subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }} # Target Azure Subscription ID for deployment
 
     - name: Deploy Azure Data Factory (Test)
       run: |
-        ADF_SUBFOLDER_NAME="dev-adf-vikash" # The name of your DEV ADF instance
-        ADF_ARM_TEMPLATE_PATH="${{ github.workspace }}/adf_publish_repo/${ADF_SUBFOLDER_NAME}/ARMTemplateForFactory.json"
-        ADF_ARM_PARAMETERS_PATH="${{ github.workspace }}/adf_publish_repo/${ADF_SUBFOLDER_NAME}/ARMTemplateParametersForFactory.json" # Now modified!
-
-        echo "Attempting to deploy from: $ADF_ARM_TEMPLATE_PATH"
+        # Define paths to the ARM template and parameters file
+        ADF_ARM_TEMPLATE_PATH="${{ github.workspace }}/adf_publish_repo/${{ env.ADF_DEV_SUBFOLDER_NAME }}/ARMTemplateForFactory.json"
+        ADF_ARM_PARAMETERS_PATH="${{ github.workspace }}/adf_publish_repo/${{ env.ADF_DEV_SUBFOLDER_NAME }}/ARMTemplateParametersForFactory.json" 
+        
+        echo "Attempting to deploy ARM template from: $ADF_ARM_TEMPLATE_PATH"
         echo "Starting incremental deployment to Test ADF: ${{ env.ADF_NAME_TEST }} for release ${{ env.RELEASE_TAG }}"
         
+        # Execute the Azure CLI command to deploy the ARM template
         az deployment group create \
           --resource-group ${{ env.ADF_RESOURCE_GROUP_TEST }} \
           --template-file "$ADF_ARM_TEMPLATE_PATH" \
           --parameters "$ADF_ARM_PARAMETERS_PATH" \
           --name "ADF-Test-Release-${{ env.RELEASE_TAG }}-${{ github.run_number }}" \
-          --mode Incremental
+          --mode Incremental 
 
     - name: Post-Deployment Steps (Test)
       run: |
         echo "Test deployment for release ${{ env.RELEASE_TAG }} completed successfully!"
-
-    # You might want to upload artifacts from Test here if needed for Prod validation
-    - name: Upload Test Deployment Artifacts (Optional)
-      uses: actions/upload-artifact@v4
+    
+    # --- MODIFIED STEP: Upload Artifacts (Changed name to remove colon) ---
+    - name: Upload Test Deployment Artifacts
+      uses: actions/upload-artifact@v4 
       with:
-        name: adf-arm-templates-${{ env.RELEASE_TAG }}
-        path: adf_publish_repo/dev-adf-vikash/ # Adjust path if your templates are not directly in this folder
-        retention-days: 7
+        # Changed 'name' to use a hyphen instead of direct SHA (or short SHA)
+        # Using github.run_id is also a good unique identifier
+        name: adf-arm-templates-run-${{ github.run_id }} # Safer artifact name
+        path: adf_publish_repo/${{ env.ADF_DEV_SUBFOLDER_NAME }}/ 
+        retention-days: 7  
