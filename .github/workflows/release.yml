@@ -20,7 +20,7 @@ permissions:
 jobs:
   deploy-test:
     runs-on: ubuntu-latest
-    environment: Test # Links to your 'Test' GitHub environment for secrets and protection rules
+    environment: test # Links to your 'Test' GitHub environment for secrets and protection rules
     steps:
     - name: Checkout adf_publish branch for ARM templates
       uses: actions/checkout@v4
