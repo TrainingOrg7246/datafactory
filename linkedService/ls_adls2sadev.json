@@ -1,0 +1,10 @@
+{
+	"name": "ls_adls2sadev",
+	"properties": {
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "https://adls2sadev.dfs.core.windows.net/"
+		}
+	}
+}
