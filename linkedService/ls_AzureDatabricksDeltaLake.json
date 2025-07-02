@@ -1,0 +1,40 @@
+{
+	"name": "ls_AzureDatabricksDeltaLake",
+	"properties": {
+		"parameters": {
+			"DatabricksWorkspaceUrl": {
+				"type": "String",
+				"defaultValue": "https://adb-1617961449375788.8.azuredatabricks.net/?o=1617961449375788"
+			},
+			"DatabricksWorkspaceResourceId": {
+				"type": "String",
+				"defaultValue": "/subscriptions/88e758f6-2daf-42fb-9c16-2691a75af873/resourceGroups/rg-dev/providers/Microsoft.Databricks/workspaces/adb-ws-dev"
+			},
+			"DatabricksExistingClusterId": {
+				"type": "String",
+				"defaultValue": "1617961449375788"
+			},
+			"DatabricksAccessTokenSecretName": {
+				"type": "string",
+				"defaultValue": "adb-dev-ws"
+			}
+		},
+		"annotations": [],
+		"type": "AzureDatabricksDeltaLake",
+		"typeProperties": {
+			"domain": "@{linkedService().DatabricksWorkspaceUrl}",
+			"clusterId": "@{linkedService().DatabricksExistingClusterId}",
+			"accessToken": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "ls_dev_key_vault",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": {
+					"value": "@linkedService().DatabricksAccessTokenSecretName",
+					"type": "Expression"
+				}
+			}
+		}
+	}
+}
