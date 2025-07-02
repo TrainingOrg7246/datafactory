@@ -4,6 +4,9 @@
 	"parameters": {
 		"factoryName": {
 			"value": "dev-adf-vikash"
+		},
+		"ls_adls2sadev_properties_typeProperties_url": {
+			"value": "https://adls2sadev.dfs.core.windows.net/"
 		}
 	}
 }
