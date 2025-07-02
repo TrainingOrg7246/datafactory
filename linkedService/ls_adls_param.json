@@ -1,0 +1,15 @@
+{
+	"name": "ls_adls_param",
+	"properties": {
+		"parameters": {
+			"adls_account_name": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "@{linkedService().adls_account_name}"
+		}
+	}
+}
