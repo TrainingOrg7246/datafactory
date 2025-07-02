@@ -1,5 +1,13 @@
 {
 	"name": "dev-adf-vikash",
+	"properties": {
+		"globalParameters": {
+			"adls_account_name": {
+				"type": "string",
+				"value": "mydevdatalake"
+			}
+		}
+	},
 	"location": "eastus",
 	"identity": {
 		"type": "SystemAssigned",
