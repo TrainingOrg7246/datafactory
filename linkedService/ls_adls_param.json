@@ -3,7 +3,8 @@
 	"properties": {
 		"parameters": {
 			"adls_account_name": {
-				"type": "String"
+				"type": "String",
+				"defaultValue": "adls2sadev"
 			}
 		},
 		"annotations": [],
