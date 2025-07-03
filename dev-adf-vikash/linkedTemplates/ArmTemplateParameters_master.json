@@ -5,8 +5,17 @@
 		"factoryName": {
 			"value": "dev-adf-vikash"
 		},
-		"ls_adls2sadev_properties_typeProperties_url": {
-			"value": "https://adls2sadev.dfs.core.windows.net/"
+		"ls_AzureDatabricks_properties_typeProperties_existingClusterId": {
+			"value": "@linkedService().DatabricksExistingClusterId"
+		},
+		"ls_adls_param_properties_typeProperties_url": {
+			"value": "@{linkedService().adls_account_name}"
+		},
+		"ls_dev_KeyVault_properties_typeProperties_baseUrl": {
+			"value": "https://Az-keyVault-dev.vault.azure.net/"
+		},
+		"ls_dev_key_vault_properties_typeProperties_baseUrl": {
+			"value": "https://Az-keyVault-dev.vault.azure.net/"
 		},
 		"containerUri": {
 			"value": ""

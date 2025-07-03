@@ -7,9 +7,21 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "dev-adf-vikash"
 		},
-		"ls_adls2sadev_properties_typeProperties_url": {
+		"ls_AzureDatabricks_properties_typeProperties_existingClusterId": {
 			"type": "string",
-			"defaultValue": "https://adls2sadev.dfs.core.windows.net/"
+			"defaultValue": "@linkedService().DatabricksExistingClusterId"
+		},
+		"ls_adls_param_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "@{linkedService().adls_account_name}"
+		},
+		"ls_dev_KeyVault_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://Az-keyVault-dev.vault.azure.net/"
+		},
+		"ls_dev_key_vault_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://Az-keyVault-dev.vault.azure.net/"
 		}
 	},
 	"variables": {
@@ -23,26 +35,12 @@
 			"properties": {
 				"activities": [
 					{
-						"name": "ForEach1",
-						"type": "ForEach",
+						"name": "Wait1",
+						"type": "Wait",
 						"dependsOn": [],
 						"userProperties": [],
 						"typeProperties": {
-							"items": {
-								"value": "@pipeline().parameters.Animal",
-								"type": "Expression"
-							},
-							"activities": [
-								{
-									"name": "Wait1",
-									"type": "Wait",
-									"dependsOn": [],
-									"userProperties": [],
-									"typeProperties": {
-										"waitTimeInSeconds": 1
-									}
-								}
-							]
+							"waitTimeInSeconds": 1
 						}
 					}
 				],
@@ -66,14 +64,76 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/ls_adls2sadev')]",
+			"name": "[concat(parameters('factoryName'), '/ls_AzureDatabricks')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"DatabricksWorkspaceUrl": {
+						"type": "String",
+						"defaultValue": "https://adb-1617961449375788.8.azuredatabricks.net/?o=1617961449375788"
+					},
+					"DatabricksExistingClusterId": {
+						"type": "String",
+						"defaultValue": "0703-081034-1n1lz6u"
+					},
+					"DatabricksWorkspaceResourceId": {
+						"type": "String",
+						"defaultValue": "/subscriptions/88e758f6-2daf-42fb-9c16-2691a75af873/resourceGroups/rg-dev/providers/Microsoft.Databricks/workspaces/adb-ws-dev"
+					}
+				},
+				"annotations": [],
+				"type": "AzureDatabricks",
+				"typeProperties": {
+					"domain": "@linkedService().DatabricksWorkspaceUrl",
+					"authentication": "MSI",
+					"workspaceResourceId": "@linkedService().DatabricksWorkspaceResourceId",
+					"existingClusterId": "[parameters('ls_AzureDatabricks_properties_typeProperties_existingClusterId')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_adls_param')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"adls_account_name": {
+						"type": "String",
+						"defaultValue": "adls2sadev"
+					}
+				},
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('ls_adls_param_properties_typeProperties_url')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_dev_KeyVault')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"annotations": [],
-				"type": "AzureBlobFS",
+				"type": "AzureKeyVault",
 				"typeProperties": {
-					"url": "[parameters('ls_adls2sadev_properties_typeProperties_url')]"
+					"baseUrl": "[parameters('ls_dev_KeyVault_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_dev_key_vault')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('ls_dev_key_vault_properties_typeProperties_baseUrl')]"
 				}
 			},
 			"dependsOn": []

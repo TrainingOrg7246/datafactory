@@ -7,9 +7,21 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "dev-adf-vikash"
 		},
-		"ls_adls2sadev_properties_typeProperties_url": {
+		"ls_AzureDatabricks_properties_typeProperties_existingClusterId": {
 			"type": "string",
-			"defaultValue": "https://adls2sadev.dfs.core.windows.net/"
+			"defaultValue": "@linkedService().DatabricksExistingClusterId"
+		},
+		"ls_adls_param_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "@{linkedService().adls_account_name}"
+		},
+		"ls_dev_KeyVault_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://Az-keyVault-dev.vault.azure.net/"
+		},
+		"ls_dev_key_vault_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://Az-keyVault-dev.vault.azure.net/"
 		},
 		"containerUri": {
 			"type": "string",
@@ -38,8 +50,17 @@
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
 					},
-					"ls_adls2sadev_properties_typeProperties_url": {
-						"value": "[parameters('ls_adls2sadev_properties_typeProperties_url')]"
+					"ls_AzureDatabricks_properties_typeProperties_existingClusterId": {
+						"value": "[parameters('ls_AzureDatabricks_properties_typeProperties_existingClusterId')]"
+					},
+					"ls_adls_param_properties_typeProperties_url": {
+						"value": "[parameters('ls_adls_param_properties_typeProperties_url')]"
+					},
+					"ls_dev_KeyVault_properties_typeProperties_baseUrl": {
+						"value": "[parameters('ls_dev_KeyVault_properties_typeProperties_baseUrl')]"
+					},
+					"ls_dev_key_vault_properties_typeProperties_baseUrl": {
+						"value": "[parameters('ls_dev_key_vault_properties_typeProperties_baseUrl')]"
 					}
 				}
 			},
