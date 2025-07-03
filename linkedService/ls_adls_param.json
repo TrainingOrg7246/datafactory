@@ -5,6 +5,10 @@
 			"adls_account_name": {
 				"type": "String",
 				"defaultValue": "adls2sadev"
+			},
+			"adls_account_secret": {
+				"type": "string",
+				"defaultValue": "adls2sadev"
 			}
 		},
 		"annotations": [],
@@ -18,7 +22,7 @@
 					"type": "LinkedServiceReference"
 				},
 				"secretName": {
-					"value": "@linkedService().adls_account_name",
+					"value": "@linkedService().adls_account_secret",
 					"type": "Expression"
 				}
 			}
