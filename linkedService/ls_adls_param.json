@@ -10,7 +10,18 @@
 		"annotations": [],
 		"type": "AzureBlobFS",
 		"typeProperties": {
-			"url": "@{linkedService().adls_account_name}"
+			"url": "@{linkedService().adls_account_name}",
+			"accountKey": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "ls_dev_key_vault",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": {
+					"value": "@linkedService().adls_account_name",
+					"type": "Expression"
+				}
+			}
 		}
 	}
 }
