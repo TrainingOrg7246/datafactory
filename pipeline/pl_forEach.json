@@ -3,55 +3,12 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "ForEach1",
-				"type": "ForEach",
+				"name": "Wait1",
+				"type": "Wait",
 				"dependsOn": [],
 				"userProperties": [],
 				"typeProperties": {
-					"items": {
-						"value": "@pipeline().parameters.Animal",
-						"type": "Expression"
-					},
-					"activities": [
-						{
-							"name": "Wait1",
-							"type": "Wait",
-							"dependsOn": [],
-							"userProperties": [],
-							"typeProperties": {
-								"waitTimeInSeconds": 1
-							}
-						},
-						{
-							"name": "Notebook1",
-							"type": "DatabricksNotebook",
-							"dependsOn": [
-								{
-									"activity": "Wait1",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"linkedServiceName": {
-								"referenceName": "ls_AzureDatabricks",
-								"type": "LinkedServiceReference",
-								"parameters": {
-									"DatabricksWorkspaceUrl": "https://adb-1617961449375788.8.azuredatabricks.net/?o=1617961449375788",
-									"DatabricksExistingClusterId": "0703-081034-1n1lz6u",
-									"DatabricksWorkspaceResourceId": "/subscriptions/88e758f6-2daf-42fb-9c16-2691a75af873/resourceGroups/rg-dev/providers/Microsoft.Databricks/workspaces/adb-ws-dev"
-								}
-							}
-						}
-					]
+					"waitTimeInSeconds": 1
 				}
 			}
 		],
