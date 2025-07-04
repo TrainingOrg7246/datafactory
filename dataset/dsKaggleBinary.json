@@ -1,0 +1,17 @@
+{
+	"name": "dsKaggleBinary",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_Http_Kaggle",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "HttpServerLocation",
+				"relativeUrl": "api/v1/datasets/download/unidpro/hair-loss-male-norwood-scale"
+			}
+		}
+	}
+}

@@ -1,0 +1,18 @@
+{
+	"name": "dsKaggleCopybinaryTOsink",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_param",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "hair-loss-male-norwood-scale.zip",
+				"fileSystem": "raw"
+			}
+		}
+	}
+}
