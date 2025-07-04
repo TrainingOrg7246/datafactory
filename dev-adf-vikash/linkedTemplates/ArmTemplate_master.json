@@ -7,13 +7,25 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "dev-adf-vikash"
 		},
+		"ls_Http_Kaggle_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'ls_Http_Kaggle'"
+		},
 		"ls_AzureDatabricks_properties_typeProperties_existingClusterId": {
 			"type": "string",
 			"defaultValue": "@linkedService().DatabricksExistingClusterId"
 		},
+		"ls_Http_Kaggle_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://www.kaggle.com/"
+		},
+		"ls_Http_Kaggle_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "VikashSoni123"
+		},
 		"ls_adls_param_properties_typeProperties_url": {
 			"type": "string",
-			"defaultValue": "@{linkedService().adls_account_name}"
+			"defaultValue": "https://adls2sadev.dfs.core.windows.net"
 		},
 		"ls_dev_KeyVault_properties_typeProperties_baseUrl": {
 			"type": "string",
@@ -50,17 +62,26 @@
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
 					},
-					"ls_AzureDatabricks_properties_typeProperties_existingClusterId": {
-						"value": "[parameters('ls_AzureDatabricks_properties_typeProperties_existingClusterId')]"
+					"ls_Http_Kaggle_password": {
+						"value": "[parameters('ls_Http_Kaggle_password')]"
 					},
-					"ls_adls_param_properties_typeProperties_url": {
-						"value": "[parameters('ls_adls_param_properties_typeProperties_url')]"
+					"ls_Http_Kaggle_properties_typeProperties_url": {
+						"value": "[parameters('ls_Http_Kaggle_properties_typeProperties_url')]"
+					},
+					"ls_Http_Kaggle_properties_typeProperties_userName": {
+						"value": "[parameters('ls_Http_Kaggle_properties_typeProperties_userName')]"
 					},
 					"ls_dev_KeyVault_properties_typeProperties_baseUrl": {
 						"value": "[parameters('ls_dev_KeyVault_properties_typeProperties_baseUrl')]"
 					},
 					"ls_dev_key_vault_properties_typeProperties_baseUrl": {
 						"value": "[parameters('ls_dev_key_vault_properties_typeProperties_baseUrl')]"
+					},
+					"ls_AzureDatabricks_properties_typeProperties_existingClusterId": {
+						"value": "[parameters('ls_AzureDatabricks_properties_typeProperties_existingClusterId')]"
+					},
+					"ls_adls_param_properties_typeProperties_url": {
+						"value": "[parameters('ls_adls_param_properties_typeProperties_url')]"
 					}
 				}
 			},

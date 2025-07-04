@@ -5,11 +5,20 @@
 		"factoryName": {
 			"value": "dev-adf-vikash"
 		},
+		"ls_Http_Kaggle_password": {
+			"value": ""
+		},
 		"ls_AzureDatabricks_properties_typeProperties_existingClusterId": {
 			"value": "@linkedService().DatabricksExistingClusterId"
 		},
+		"ls_Http_Kaggle_properties_typeProperties_url": {
+			"value": "https://www.kaggle.com/"
+		},
+		"ls_Http_Kaggle_properties_typeProperties_userName": {
+			"value": "VikashSoni123"
+		},
 		"ls_adls_param_properties_typeProperties_url": {
-			"value": "@{linkedService().adls_account_name}"
+			"value": "https://adls2sadev.dfs.core.windows.net"
 		},
 		"ls_dev_KeyVault_properties_typeProperties_baseUrl": {
 			"value": "https://Az-keyVault-dev.vault.azure.net/"
