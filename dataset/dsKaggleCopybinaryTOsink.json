@@ -10,7 +10,6 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": "hair-loss-male-norwood-scale.zip",
 				"fileSystem": "raw"
 			}
 		}
