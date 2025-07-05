@@ -11,10 +11,6 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'ls_Http_Kaggle'"
 		},
-		"ls_AzureDatabricks_properties_typeProperties_existingClusterId": {
-			"type": "string",
-			"defaultValue": "@linkedService().DatabricksExistingClusterId"
-		},
 		"ls_Http_Kaggle_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://www.kaggle.com/"
@@ -76,9 +72,6 @@
 					},
 					"ls_dev_key_vault_properties_typeProperties_baseUrl": {
 						"value": "[parameters('ls_dev_key_vault_properties_typeProperties_baseUrl')]"
-					},
-					"ls_AzureDatabricks_properties_typeProperties_existingClusterId": {
-						"value": "[parameters('ls_AzureDatabricks_properties_typeProperties_existingClusterId')]"
 					},
 					"ls_adls_param_properties_typeProperties_url": {
 						"value": "[parameters('ls_adls_param_properties_typeProperties_url')]"

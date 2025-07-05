@@ -11,10 +11,6 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'ls_Http_Kaggle'"
 		},
-		"ls_AzureDatabricks_properties_typeProperties_existingClusterId": {
-			"type": "string",
-			"defaultValue": "@linkedService().DatabricksExistingClusterId"
-		},
 		"ls_Http_Kaggle_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://www.kaggle.com/"
@@ -76,8 +72,7 @@
 							"sink": {
 								"type": "BinarySink",
 								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings",
-									"copyBehavior": "FlattenHierarchy"
+									"type": "AzureBlobFSWriteSettings"
 								}
 							},
 							"enableStaging": false
@@ -96,6 +91,49 @@
 								"parameters": {}
 							}
 						]
+					},
+					{
+						"name": "UnzipKaggle_HairLoss",
+						"type": "DatabricksNotebook",
+						"dependsOn": [
+							{
+								"activity": "Wait1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Users/vikashsoni07246@gmail.com/UnzipKaggle_HairLoss.zip"
+						},
+						"linkedServiceName": {
+							"referenceName": "ls_devADB",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Wait1",
+						"type": "Wait",
+						"dependsOn": [
+							{
+								"activity": "Kaggle_HairLoass_Copy",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"waitTimeInSeconds": 10
+						}
 					}
 				],
 				"policy": {
@@ -105,7 +143,8 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/dsKaggleBinary')]",
-				"[concat(variables('factoryId'), '/datasets/dsKaggleCopybinaryTOsink')]"
+				"[concat(variables('factoryId'), '/datasets/dsKaggleCopybinaryTOsink')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_devADB')]"
 			]
 		},
 		{
@@ -142,6 +181,30 @@
 				"annotations": []
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Kaggle_Json1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_adls_param",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "Unzip_Kaggle",
+						"fileSystem": "devdata"
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls_param')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/dsJson1Kaggle')]",
@@ -210,7 +273,7 @@
 						"type": "AzureBlobFSLocation",
 						"fileName": "HairLoss.zip",
 						"folderPath": "Kaggle",
-						"fileSystem": "raw"
+						"fileSystem": "devdata"
 					},
 					"compression": {
 						"type": "ZipDeflate"
@@ -247,48 +310,27 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/ls_AzureDatabricks')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"name": "[concat(parameters('factoryName'), '/dsUnzipKaggleJson1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"parameters": {
-					"DatabricksWorkspaceUrl": {
-						"type": "String",
-						"defaultValue": "https://adb-1617961449375788.8.azuredatabricks.net/?o=1617961449375788"
-					},
-					"DatabricksExistingClusterId": {
-						"type": "String",
-						"defaultValue": "0703-081034-1n1lz6u"
-					},
-					"DatabricksWorkspaceResourceId": {
-						"type": "String",
-						"defaultValue": "/subscriptions/88e758f6-2daf-42fb-9c16-2691a75af873/resourceGroups/rg-dev/providers/Microsoft.Databricks/workspaces/adb-ws-dev"
-					},
-					"AccessSecret": {
-						"type": "String",
-						"defaultValue": "adb-dev-ws"
-					}
+				"linkedServiceName": {
+					"referenceName": "ls_adls_param",
+					"type": "LinkedServiceReference"
 				},
 				"annotations": [],
-				"type": "AzureDatabricks",
+				"type": "Json",
 				"typeProperties": {
-					"domain": "@linkedService().DatabricksWorkspaceUrl",
-					"accessToken": {
-						"type": "AzureKeyVaultSecret",
-						"store": {
-							"referenceName": "ls_dev_key_vault",
-							"type": "LinkedServiceReference"
-						},
-						"secretName": {
-							"value": "@linkedService().AccessSecret",
-							"type": "Expression"
-						}
-					},
-					"existingClusterId": "[parameters('ls_AzureDatabricks_properties_typeProperties_existingClusterId')]"
-				}
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "Unzip_Kaggle",
+						"fileSystem": "devdata"
+					}
+				},
+				"schema": {}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_dev_key_vault')]"
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls_param')]"
 			]
 		},
 		{
@@ -328,6 +370,34 @@
 						},
 						"secretName": "adls2sadev"
 					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_dev_key_vault')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_devADB')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricks",
+				"typeProperties": {
+					"domain": "https://adb-1617961449375788.8.azuredatabricks.net",
+					"accessToken": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "ls_dev_key_vault",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "adb-dev-ws"
+					},
+					"newClusterNodeType": "Standard_DS3_v2",
+					"newClusterNumOfWorker": "1",
+					"newClusterVersion": "15.4.x-scala2.12",
+					"clusterOption": "Fixed",
+					"newClusterInitScripts": []
 				}
 			},
 			"dependsOn": [

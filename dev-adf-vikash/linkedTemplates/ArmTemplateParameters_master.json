@@ -8,9 +8,6 @@
 		"ls_Http_Kaggle_password": {
 			"value": ""
 		},
-		"ls_AzureDatabricks_properties_typeProperties_existingClusterId": {
-			"value": "@linkedService().DatabricksExistingClusterId"
-		},
 		"ls_Http_Kaggle_properties_typeProperties_url": {
 			"value": "https://www.kaggle.com/"
 		},
