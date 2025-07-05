@@ -12,7 +12,7 @@
 				"type": "AzureBlobFSLocation",
 				"fileName": "HairLoss.zip",
 				"folderPath": "Kaggle",
-				"fileSystem": "raw"
+				"fileSystem": "devdata"
 			},
 			"compression": {
 				"type": "ZipDeflate"
