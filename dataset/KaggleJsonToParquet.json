@@ -1,0 +1,20 @@
+{
+	"name": "KaggleJsonToParquet",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_param",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "raw",
+				"fileSystem": "devdata"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	}
+}

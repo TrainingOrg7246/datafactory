@@ -1,0 +1,116 @@
+{
+	"name": "KaggleJsonToTabular",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_param",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "annotation.json",
+				"folderPath": "Unzip_Kaggle",
+				"fileSystem": "devdata"
+			}
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"licenses": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "integer"
+							},
+							"url": {
+								"type": "string"
+							}
+						}
+					}
+				},
+				"info": {
+					"type": "object",
+					"properties": {
+						"contributor": {
+							"type": "string"
+						},
+						"date_created": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						},
+						"url": {
+							"type": "string"
+						},
+						"version": {
+							"type": "string"
+						},
+						"year": {
+							"type": "string"
+						}
+					}
+				},
+				"categories": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"id": {
+								"type": "integer"
+							},
+							"name": {
+								"type": "string"
+							},
+							"supercategory": {
+								"type": "string"
+							}
+						}
+					}
+				},
+				"images": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"id": {
+								"type": "integer"
+							},
+							"width": {
+								"type": "integer"
+							},
+							"height": {
+								"type": "integer"
+							},
+							"file_name": {
+								"type": "string"
+							},
+							"license": {
+								"type": "integer"
+							},
+							"flickr_url": {
+								"type": "string"
+							},
+							"coco_url": {
+								"type": "string"
+							},
+							"date_captured": {
+								"type": "integer"
+							}
+						}
+					}
+				},
+				"annotations": {
+					"type": "array"
+				}
+			}
+		}
+	}
+}

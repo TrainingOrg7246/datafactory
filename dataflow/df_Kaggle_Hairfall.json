@@ -1,0 +1,62 @@
+{
+	"name": "df_Kaggle_Hairfall",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "KaggleJsonToTabular",
+						"type": "DatasetReference"
+					},
+					"name": "KaggleHairfallTransformation"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "KaggleJsonToParquet",
+						"type": "DatasetReference"
+					},
+					"name": "sinkKaggleJsonToParquet"
+				}
+			],
+			"transformations": [
+				{
+					"name": "flatten1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          licenses as (name as string, id as integer, url as string)[],",
+				"          info as (contributor as string, date_created as string, description as string, url as string, version as string, year as string),",
+				"          categories as (id as integer, name as string, supercategory as string)[],",
+				"          images as (id as integer, width as integer, height as integer, file_name as string, license as integer, flickr_url as string, coco_url as string, date_captured as integer)[],",
+				"          annotations as string[]",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     documentForm: 'documentPerLine') ~> KaggleHairfallTransformation",
+				"KaggleHairfallTransformation foldDown(unroll(),",
+				"     mapColumn(",
+				"          licenses,",
+				"          info,",
+				"          categories,",
+				"          images,",
+				"          annotations",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> flatten1",
+				"flatten1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'parquet',",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sinkKaggleJsonToParquet"
+			]
+		}
+	}
+}
