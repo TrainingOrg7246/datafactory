@@ -50,6 +50,49 @@
 						"type": "DatasetReference"
 					}
 				]
+			},
+			{
+				"name": "UnzipKaggle_HairLoss",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "Wait1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/vikashsoni07246@gmail.com/UnzipKaggle_HairLoss.zip"
+				},
+				"linkedServiceName": {
+					"referenceName": "ls_devADB",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Wait1",
+				"type": "Wait",
+				"dependsOn": [
+					{
+						"activity": "Kaggle_HairLoass_Copy",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"waitTimeInSeconds": 10
+				}
 			}
 		],
 		"annotations": []

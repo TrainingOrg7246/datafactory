@@ -1,0 +1,19 @@
+{
+	"name": "Kaggle_Json1",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_param",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "Unzip_Kaggle",
+				"fileSystem": "devdata"
+			}
+		},
+		"schema": {}
+	}
+}
