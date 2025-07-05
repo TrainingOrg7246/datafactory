@@ -23,7 +23,7 @@
 			],
 			"transformations": [
 				{
-					"name": "flatten1"
+					"name": "select1"
 				}
 			],
 			"scriptLines": [
@@ -38,17 +38,16 @@
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
 				"     documentForm: 'documentPerLine') ~> KaggleHairfallTransformation",
-				"KaggleHairfallTransformation foldDown(unroll(),",
-				"     mapColumn(",
+				"KaggleHairfallTransformation select(mapColumn(",
 				"          licenses,",
 				"          info,",
 				"          categories,",
 				"          images,",
 				"          annotations",
 				"     ),",
-				"     skipDuplicateMapInputs: false,",
-				"     skipDuplicateMapOutputs: false) ~> flatten1",
-				"flatten1 sink(allowSchemaDrift: true,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'parquet',",
 				"     umask: 0022,",
