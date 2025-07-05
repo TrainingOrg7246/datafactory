@@ -13,11 +13,7 @@
 				},
 				"secretName": "adb-dev-ws"
 			},
-			"newClusterNodeType": "Standard_DS3_v2",
-			"newClusterNumOfWorker": "1",
-			"newClusterVersion": "15.4.x-scala2.12",
-			"clusterOption": "Fixed",
-			"newClusterInitScripts": []
+			"existingClusterId": "0705-064201-yaukw7ed"
 		}
 	}
 }
