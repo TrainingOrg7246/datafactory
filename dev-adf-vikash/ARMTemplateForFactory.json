@@ -23,6 +23,10 @@
 			"type": "string",
 			"defaultValue": "https://adls2sadev.dfs.core.windows.net"
 		},
+		"ls_devADB_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "0705-064201-yaukw7ed"
+		},
 		"ls_dev_KeyVault_properties_typeProperties_baseUrl": {
 			"type": "string",
 			"defaultValue": "https://Az-keyVault-dev.vault.azure.net/"
@@ -134,6 +138,43 @@
 						"typeProperties": {
 							"waitTimeInSeconds": 10
 						}
+					},
+					{
+						"name": "DfKaggleJsonToParquet",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "UnzipKaggle_HairLoss",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_Kaggle_Hairfall",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"KaggleHairfallTransformation": {},
+									"sinkKaggleJsonToParquet": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
 					}
 				],
 				"policy": {
@@ -144,7 +185,8 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/dsKaggleBinary')]",
 				"[concat(variables('factoryId'), '/datasets/dsKaggleCopybinaryTOsink')]",
-				"[concat(variables('factoryId'), '/linkedServices/ls_devADB')]"
+				"[concat(variables('factoryId'), '/linkedServices/ls_devADB')]",
+				"[concat(variables('factoryId'), '/dataflows/df_Kaggle_Hairfall')]"
 			]
 		},
 		{
@@ -393,11 +435,7 @@
 						},
 						"secretName": "adb-dev-ws"
 					},
-					"newClusterNodeType": "Standard_DS3_v2",
-					"newClusterNumOfWorker": "1",
-					"newClusterVersion": "15.4.x-scala2.12",
-					"clusterOption": "Fixed",
-					"newClusterInitScripts": []
+					"existingClusterId": "[parameters('ls_devADB_properties_typeProperties_existingClusterId')]"
 				}
 			},
 			"dependsOn": [
@@ -450,6 +488,220 @@
 				}
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_Kaggle_Hairfall')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "KaggleJsonToTabular",
+								"type": "DatasetReference"
+							},
+							"name": "KaggleHairfallTransformation"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "KaggleJsonToParquet",
+								"type": "DatasetReference"
+							},
+							"name": "sinkKaggleJsonToParquet"
+						}
+					],
+					"transformations": [
+						{
+							"name": "flatten1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          licenses as (name as string, id as integer, url as string)[],",
+						"          info as (contributor as string, date_created as string, description as string, url as string, version as string, year as string),",
+						"          categories as (id as integer, name as string, supercategory as string)[],",
+						"          images as (id as integer, width as integer, height as integer, file_name as string, license as integer, flickr_url as string, coco_url as string, date_captured as integer)[],",
+						"          annotations as string[]",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     documentForm: 'documentPerLine') ~> KaggleHairfallTransformation",
+						"KaggleHairfallTransformation foldDown(unroll(),",
+						"     mapColumn(",
+						"          licenses,",
+						"          info,",
+						"          categories,",
+						"          images,",
+						"          annotations",
+						"     ),",
+						"     skipDuplicateMapInputs: false,",
+						"     skipDuplicateMapOutputs: false) ~> flatten1",
+						"flatten1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> sinkKaggleJsonToParquet"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/KaggleJsonToTabular')]",
+				"[concat(variables('factoryId'), '/datasets/KaggleJsonToParquet')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/KaggleJsonToTabular')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_adls_param",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "annotation.json",
+						"folderPath": "Unzip_Kaggle",
+						"fileSystem": "devdata"
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"licenses": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "integer"
+									},
+									"url": {
+										"type": "string"
+									}
+								}
+							}
+						},
+						"info": {
+							"type": "object",
+							"properties": {
+								"contributor": {
+									"type": "string"
+								},
+								"date_created": {
+									"type": "string"
+								},
+								"description": {
+									"type": "string"
+								},
+								"url": {
+									"type": "string"
+								},
+								"version": {
+									"type": "string"
+								},
+								"year": {
+									"type": "string"
+								}
+							}
+						},
+						"categories": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"id": {
+										"type": "integer"
+									},
+									"name": {
+										"type": "string"
+									},
+									"supercategory": {
+										"type": "string"
+									}
+								}
+							}
+						},
+						"images": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"id": {
+										"type": "integer"
+									},
+									"width": {
+										"type": "integer"
+									},
+									"height": {
+										"type": "integer"
+									},
+									"file_name": {
+										"type": "string"
+									},
+									"license": {
+										"type": "integer"
+									},
+									"flickr_url": {
+										"type": "string"
+									},
+									"coco_url": {
+										"type": "string"
+									},
+									"date_captured": {
+										"type": "integer"
+									}
+								}
+							}
+						},
+						"annotations": {
+							"type": "array"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls_param')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/KaggleJsonToParquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_adls_param",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "raw",
+						"fileSystem": "devdata"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls_param')]"
+			]
 		}
 	]
 }

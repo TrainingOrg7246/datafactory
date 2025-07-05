@@ -17,6 +17,9 @@
 		"ls_adls_param_properties_typeProperties_url": {
 			"value": "https://adls2sadev.dfs.core.windows.net"
 		},
+		"ls_devADB_properties_typeProperties_existingClusterId": {
+			"value": "0705-064201-yaukw7ed"
+		},
 		"ls_dev_KeyVault_properties_typeProperties_baseUrl": {
 			"value": "https://Az-keyVault-dev.vault.azure.net/"
 		},

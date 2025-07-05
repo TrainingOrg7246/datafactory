@@ -23,6 +23,10 @@
 			"type": "string",
 			"defaultValue": "https://adls2sadev.dfs.core.windows.net"
 		},
+		"ls_devADB_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "0705-064201-yaukw7ed"
+		},
 		"ls_dev_KeyVault_properties_typeProperties_baseUrl": {
 			"type": "string",
 			"defaultValue": "https://Az-keyVault-dev.vault.azure.net/"
@@ -75,6 +79,9 @@
 					},
 					"ls_adls_param_properties_typeProperties_url": {
 						"value": "[parameters('ls_adls_param_properties_typeProperties_url')]"
+					},
+					"ls_devADB_properties_typeProperties_existingClusterId": {
+						"value": "[parameters('ls_devADB_properties_typeProperties_existingClusterId')]"
 					}
 				}
 			},
