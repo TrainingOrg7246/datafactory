@@ -1,0 +1,41 @@
+{
+	"name": "DatabricksDeltaLakeDshairSink",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDatabricksDeltaLake1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureDatabricksDeltaLakeDataset",
+		"typeProperties": {
+			"database": "default",
+			"table": "info_table"
+		},
+		"schema": [
+			{
+				"name": "info_contributor",
+				"type": "string"
+			},
+			{
+				"name": "info_date_created",
+				"type": "string"
+			},
+			{
+				"name": "info_description",
+				"type": "string"
+			},
+			{
+				"name": "info_url",
+				"type": "string"
+			},
+			{
+				"name": "info_version",
+				"type": "string"
+			},
+			{
+				"name": "info_year",
+				"type": "string"
+			}
+		]
+	}
+}

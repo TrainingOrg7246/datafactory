@@ -1,5 +1,5 @@
 {
-	"name": "AzureDatabricksDeltaLakeDataset1",
+	"name": "AzureDatabricksDeltaLakeDs_hair",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "AzureDatabricksDeltaLake1",
@@ -13,44 +13,36 @@
 		},
 		"schema": [
 			{
-				"name": "CustomerID",
-				"type": "integer"
+				"name": "image_id",
+				"type": "long"
 			},
 			{
-				"name": "ProductID",
+				"name": "image_width",
+				"type": "long"
+			},
+			{
+				"name": "image_height",
+				"type": "long"
+			},
+			{
+				"name": "image_file_name",
 				"type": "string"
 			},
 			{
-				"name": "Quantity",
-				"type": "integer"
+				"name": "image_license",
+				"type": "long"
 			},
 			{
-				"name": "Price",
-				"type": "double"
-			},
-			{
-				"name": "TransactionDate",
+				"name": "image_flickr_url",
 				"type": "string"
 			},
 			{
-				"name": "PaymentMethod",
+				"name": "image_coco_url",
 				"type": "string"
 			},
 			{
-				"name": "StoreLocation",
-				"type": "string"
-			},
-			{
-				"name": "ProductCategory",
-				"type": "string"
-			},
-			{
-				"name": "DiscountApplied",
-				"type": "double"
-			},
-			{
-				"name": "TotalAmount",
-				"type": "double"
+				"name": "image_date_captured",
+				"type": "long"
 			}
 		]
 	}
