@@ -7,9 +7,21 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "dev-adf-vikash"
 		},
+		"AzureDatabricksDeltaLake1_accessToken": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accessToken' of 'AzureDatabricksDeltaLake1'"
+		},
+		"linkedService1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'linkedService1'"
+		},
 		"ls_Http_Kaggle_password": {
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'ls_Http_Kaggle'"
+		},
+		"ls_adls_param_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ls_adls_param'"
 		},
 		"ls_Http_Kaggle_properties_typeProperties_url": {
 			"type": "string",
@@ -21,7 +33,7 @@
 		},
 		"ls_adls_param_properties_typeProperties_url": {
 			"type": "string",
-			"defaultValue": "https://adls2sadev.dfs.core.windows.net"
+			"defaultValue": "https://adls2sadev.dfs.core.windows.net/"
 		},
 		"ls_devADB_properties_typeProperties_existingClusterId": {
 			"type": "string",
@@ -62,8 +74,17 @@
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
 					},
+					"AzureDatabricksDeltaLake1_accessToken": {
+						"value": "[parameters('AzureDatabricksDeltaLake1_accessToken')]"
+					},
+					"linkedService1_connectionString": {
+						"value": "[parameters('linkedService1_connectionString')]"
+					},
 					"ls_Http_Kaggle_password": {
 						"value": "[parameters('ls_Http_Kaggle_password')]"
+					},
+					"ls_adls_param_accountKey": {
+						"value": "[parameters('ls_adls_param_accountKey')]"
 					},
 					"ls_Http_Kaggle_properties_typeProperties_url": {
 						"value": "[parameters('ls_Http_Kaggle_properties_typeProperties_url')]"
@@ -71,14 +92,14 @@
 					"ls_Http_Kaggle_properties_typeProperties_userName": {
 						"value": "[parameters('ls_Http_Kaggle_properties_typeProperties_userName')]"
 					},
+					"ls_adls_param_properties_typeProperties_url": {
+						"value": "[parameters('ls_adls_param_properties_typeProperties_url')]"
+					},
 					"ls_dev_KeyVault_properties_typeProperties_baseUrl": {
 						"value": "[parameters('ls_dev_KeyVault_properties_typeProperties_baseUrl')]"
 					},
 					"ls_dev_key_vault_properties_typeProperties_baseUrl": {
 						"value": "[parameters('ls_dev_key_vault_properties_typeProperties_baseUrl')]"
-					},
-					"ls_adls_param_properties_typeProperties_url": {
-						"value": "[parameters('ls_adls_param_properties_typeProperties_url')]"
 					},
 					"ls_devADB_properties_typeProperties_existingClusterId": {
 						"value": "[parameters('ls_devADB_properties_typeProperties_existingClusterId')]"
@@ -86,6 +107,26 @@
 				}
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "dev-adf-vikash_ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'dev-adf-vikash_ArmTemplate_0')]"
+			]
 		}
 	]
 }

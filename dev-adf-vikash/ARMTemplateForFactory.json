@@ -7,9 +7,21 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "dev-adf-vikash"
 		},
+		"AzureDatabricksDeltaLake1_accessToken": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accessToken' of 'AzureDatabricksDeltaLake1'"
+		},
+		"linkedService1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'linkedService1'"
+		},
 		"ls_Http_Kaggle_password": {
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'ls_Http_Kaggle'"
+		},
+		"ls_adls_param_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ls_adls_param'"
 		},
 		"ls_Http_Kaggle_properties_typeProperties_url": {
 			"type": "string",
@@ -21,7 +33,7 @@
 		},
 		"ls_adls_param_properties_typeProperties_url": {
 			"type": "string",
-			"defaultValue": "https://adls2sadev.dfs.core.windows.net"
+			"defaultValue": "https://adls2sadev.dfs.core.windows.net/"
 		},
 		"ls_devADB_properties_typeProperties_existingClusterId": {
 			"type": "string",
@@ -40,6 +52,74 @@
 		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
 	},
 	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/CopyDeltatable')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "CopyDeltaTableImageToInfo",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureDatabricksDeltaLakeSource",
+								"exportSettings": {
+									"type": "AzureDatabricksDeltaLakeExportCommand"
+								}
+							},
+							"sink": {
+								"type": "AzureDatabricksDeltaLakeSink",
+								"preCopyScript": "TRUNCATE TABLE default.info_table",
+								"importSettings": {
+									"type": "AzureDatabricksDeltaLakeImportCommand"
+								}
+							},
+							"enableStaging": true,
+							"stagingSettings": {
+								"linkedServiceName": {
+									"referenceName": "ls_adls_param",
+									"type": "LinkedServiceReference"
+								},
+								"path": "devdata/staging"
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "AzureDatabricksDeltaLakeDs_hair",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DatabricksDeltaLakeDshairSink",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/AzureDatabricksDeltaLakeDs_hair')]",
+				"[concat(variables('factoryId'), '/datasets/DatabricksDeltaLakeDshairSink')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls_param')]"
+			]
+		},
 		{
 			"name": "[concat(parameters('factoryName'), '/pl__Kaggle_copy_json')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
@@ -225,6 +305,252 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/AzureDatabricksDeltaLakeDs_hair')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDatabricksDeltaLake1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureDatabricksDeltaLakeDataset",
+				"typeProperties": {
+					"database": "default",
+					"table": "images_table"
+				},
+				"schema": [
+					{
+						"name": "image_id",
+						"type": "long"
+					},
+					{
+						"name": "image_width",
+						"type": "long"
+					},
+					{
+						"name": "image_height",
+						"type": "long"
+					},
+					{
+						"name": "image_file_name",
+						"type": "string"
+					},
+					{
+						"name": "image_license",
+						"type": "long"
+					},
+					{
+						"name": "image_flickr_url",
+						"type": "string"
+					},
+					{
+						"name": "image_coco_url",
+						"type": "string"
+					},
+					{
+						"name": "image_date_captured",
+						"type": "long"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDatabricksDeltaLake1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DatabricksDeltaLakeDshairSink')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDatabricksDeltaLake1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureDatabricksDeltaLakeDataset",
+				"typeProperties": {
+					"database": "default",
+					"table": "info_table"
+				},
+				"schema": [
+					{
+						"name": "info_contributor",
+						"type": "string"
+					},
+					{
+						"name": "info_date_created",
+						"type": "string"
+					},
+					{
+						"name": "info_description",
+						"type": "string"
+					},
+					{
+						"name": "info_url",
+						"type": "string"
+					},
+					{
+						"name": "info_version",
+						"type": "string"
+					},
+					{
+						"name": "info_year",
+						"type": "string"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDatabricksDeltaLake1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/KaggleJsonToParquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_adls_param",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "raw",
+						"fileSystem": "devdata"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls_param')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/KaggleJsonToTabular')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_adls_param",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "annotation.json",
+						"folderPath": "Unzip_Kaggle",
+						"fileSystem": "devdata"
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"licenses": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "integer"
+									},
+									"url": {
+										"type": "string"
+									}
+								}
+							}
+						},
+						"info": {
+							"type": "object",
+							"properties": {
+								"contributor": {
+									"type": "string"
+								},
+								"date_created": {
+									"type": "string"
+								},
+								"description": {
+									"type": "string"
+								},
+								"url": {
+									"type": "string"
+								},
+								"version": {
+									"type": "string"
+								},
+								"year": {
+									"type": "string"
+								}
+							}
+						},
+						"categories": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"id": {
+										"type": "integer"
+									},
+									"name": {
+										"type": "string"
+									},
+									"supercategory": {
+										"type": "string"
+									}
+								}
+							}
+						},
+						"images": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"id": {
+										"type": "integer"
+									},
+									"width": {
+										"type": "integer"
+									},
+									"height": {
+										"type": "integer"
+									},
+									"file_name": {
+										"type": "string"
+									},
+									"license": {
+										"type": "integer"
+									},
+									"flickr_url": {
+										"type": "string"
+									},
+									"coco_url": {
+										"type": "string"
+									},
+									"date_captured": {
+										"type": "integer"
+									}
+								}
+							}
+						},
+						"annotations": {
+							"type": "array"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls_param')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/Kaggle_Json1')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -376,6 +702,37 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/AzureDatabricksDeltaLake1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricksDeltaLake",
+				"typeProperties": {
+					"domain": "https://adb-1617961449375788.8.azuredatabricks.net",
+					"clusterId": "0705-064201-yaukw7ed",
+					"accessToken": {
+						"type": "SecureString",
+						"value": "[parameters('AzureDatabricksDeltaLake1_accessToken')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/linkedService1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('linkedService1_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ls_Http_Kaggle')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -405,18 +762,12 @@
 				"typeProperties": {
 					"url": "[parameters('ls_adls_param_properties_typeProperties_url')]",
 					"accountKey": {
-						"type": "AzureKeyVaultSecret",
-						"store": {
-							"referenceName": "ls_dev_key_vault",
-							"type": "LinkedServiceReference"
-						},
-						"secretName": "adls2sadev"
+						"type": "SecureString",
+						"value": "[parameters('ls_adls_param_accountKey')]"
 					}
 				}
 			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_dev_key_vault')]"
-			]
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/ls_devADB')]",
@@ -516,7 +867,7 @@
 					],
 					"transformations": [
 						{
-							"name": "flatten1"
+							"name": "select1"
 						}
 					],
 					"scriptLines": [
@@ -531,17 +882,16 @@
 						"     validateSchema: false,",
 						"     ignoreNoFilesFound: false,",
 						"     documentForm: 'documentPerLine') ~> KaggleHairfallTransformation",
-						"KaggleHairfallTransformation foldDown(unroll(),",
-						"     mapColumn(",
+						"KaggleHairfallTransformation select(mapColumn(",
 						"          licenses,",
 						"          info,",
 						"          categories,",
 						"          images,",
 						"          annotations",
 						"     ),",
-						"     skipDuplicateMapInputs: false,",
-						"     skipDuplicateMapOutputs: false) ~> flatten1",
-						"flatten1 sink(allowSchemaDrift: true,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"select1 sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     format: 'parquet',",
 						"     umask: 0022,",
@@ -555,152 +905,6 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/KaggleJsonToTabular')]",
 				"[concat(variables('factoryId'), '/datasets/KaggleJsonToParquet')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/KaggleJsonToTabular')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_adls_param",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "Json",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": "annotation.json",
-						"folderPath": "Unzip_Kaggle",
-						"fileSystem": "devdata"
-					}
-				},
-				"schema": {
-					"type": "object",
-					"properties": {
-						"licenses": {
-							"type": "array",
-							"items": {
-								"type": "object",
-								"properties": {
-									"name": {
-										"type": "string"
-									},
-									"id": {
-										"type": "integer"
-									},
-									"url": {
-										"type": "string"
-									}
-								}
-							}
-						},
-						"info": {
-							"type": "object",
-							"properties": {
-								"contributor": {
-									"type": "string"
-								},
-								"date_created": {
-									"type": "string"
-								},
-								"description": {
-									"type": "string"
-								},
-								"url": {
-									"type": "string"
-								},
-								"version": {
-									"type": "string"
-								},
-								"year": {
-									"type": "string"
-								}
-							}
-						},
-						"categories": {
-							"type": "array",
-							"items": {
-								"type": "object",
-								"properties": {
-									"id": {
-										"type": "integer"
-									},
-									"name": {
-										"type": "string"
-									},
-									"supercategory": {
-										"type": "string"
-									}
-								}
-							}
-						},
-						"images": {
-							"type": "array",
-							"items": {
-								"type": "object",
-								"properties": {
-									"id": {
-										"type": "integer"
-									},
-									"width": {
-										"type": "integer"
-									},
-									"height": {
-										"type": "integer"
-									},
-									"file_name": {
-										"type": "string"
-									},
-									"license": {
-										"type": "integer"
-									},
-									"flickr_url": {
-										"type": "string"
-									},
-									"coco_url": {
-										"type": "string"
-									},
-									"date_captured": {
-										"type": "integer"
-									}
-								}
-							}
-						},
-						"annotations": {
-							"type": "array"
-						}
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_adls_param')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/KaggleJsonToParquet')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_adls_param",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"folderPath": "raw",
-						"fileSystem": "devdata"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_adls_param')]"
 			]
 		}
 	]

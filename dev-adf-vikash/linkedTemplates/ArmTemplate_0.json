@@ -7,9 +7,21 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "dev-adf-vikash"
 		},
+		"AzureDatabricksDeltaLake1_accessToken": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accessToken' of 'AzureDatabricksDeltaLake1'"
+		},
+		"linkedService1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'linkedService1'"
+		},
 		"ls_Http_Kaggle_password": {
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'ls_Http_Kaggle'"
+		},
+		"ls_adls_param_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ls_adls_param'"
 		},
 		"ls_Http_Kaggle_properties_typeProperties_url": {
 			"type": "string",
@@ -19,6 +31,10 @@
 			"type": "string",
 			"defaultValue": "VikashSoni123"
 		},
+		"ls_adls_param_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://adls2sadev.dfs.core.windows.net/"
+		},
 		"ls_dev_KeyVault_properties_typeProperties_baseUrl": {
 			"type": "string",
 			"defaultValue": "https://Az-keyVault-dev.vault.azure.net/"
@@ -26,10 +42,6 @@
 		"ls_dev_key_vault_properties_typeProperties_baseUrl": {
 			"type": "string",
 			"defaultValue": "https://Az-keyVault-dev.vault.azure.net/"
-		},
-		"ls_adls_param_properties_typeProperties_url": {
-			"type": "string",
-			"defaultValue": "https://adls2sadev.dfs.core.windows.net"
 		},
 		"ls_devADB_properties_typeProperties_existingClusterId": {
 			"type": "string",
@@ -76,6 +88,37 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/AzureDatabricksDeltaLake1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricksDeltaLake",
+				"typeProperties": {
+					"domain": "https://adb-1617961449375788.8.azuredatabricks.net",
+					"clusterId": "0705-064201-yaukw7ed",
+					"accessToken": {
+						"type": "SecureString",
+						"value": "[parameters('AzureDatabricksDeltaLake1_accessToken')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/linkedService1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('linkedService1_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ls_Http_Kaggle')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -90,6 +133,23 @@
 					"password": {
 						"type": "SecureString",
 						"value": "[parameters('ls_Http_Kaggle_password')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_adls_param')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('ls_adls_param_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('ls_adls_param_accountKey')]"
 					}
 				}
 			},
@@ -143,156 +203,107 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/dsJson1Kaggle')]",
+			"name": "[concat(parameters('factoryName'), '/AzureDatabricksDeltaLakeDs_hair')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"linkedServiceName": {
-					"referenceName": "ls_Http_Kaggle",
+					"referenceName": "AzureDatabricksDeltaLake1",
 					"type": "LinkedServiceReference"
 				},
 				"annotations": [],
-				"type": "Json",
+				"type": "AzureDatabricksDeltaLakeDataset",
 				"typeProperties": {
-					"location": {
-						"type": "HttpServerLocation",
-						"relativeUrl": "api/v1/datasets/download/unidpro/hair-loss-male-norwood-scale/annotation.json"
-					},
-					"compression": {
-						"type": "ZipDeflate"
-					}
+					"database": "default",
+					"table": "images_table"
 				},
-				"schema": {}
+				"schema": [
+					{
+						"name": "image_id",
+						"type": "long"
+					},
+					{
+						"name": "image_width",
+						"type": "long"
+					},
+					{
+						"name": "image_height",
+						"type": "long"
+					},
+					{
+						"name": "image_file_name",
+						"type": "string"
+					},
+					{
+						"name": "image_license",
+						"type": "long"
+					},
+					{
+						"name": "image_flickr_url",
+						"type": "string"
+					},
+					{
+						"name": "image_coco_url",
+						"type": "string"
+					},
+					{
+						"name": "image_date_captured",
+						"type": "long"
+					}
+				]
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_Http_Kaggle')]"
+				"[concat(variables('factoryId'), '/linkedServices/AzureDatabricksDeltaLake1')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/dsKaggleBinary')]",
+			"name": "[concat(parameters('factoryName'), '/DatabricksDeltaLakeDshairSink')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"linkedServiceName": {
-					"referenceName": "ls_Http_Kaggle",
+					"referenceName": "AzureDatabricksDeltaLake1",
 					"type": "LinkedServiceReference"
 				},
 				"annotations": [],
-				"type": "Binary",
+				"type": "AzureDatabricksDeltaLakeDataset",
 				"typeProperties": {
-					"location": {
-						"type": "HttpServerLocation",
-						"relativeUrl": "api/v1/datasets/download/unidpro/hair-loss-male-norwood-scale"
-					},
-					"compression": {
-						"type": "ZipDeflate"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_Http_Kaggle')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ls_adls_param')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "AzureBlobFS",
-				"typeProperties": {
-					"url": "[parameters('ls_adls_param_properties_typeProperties_url')]",
-					"accountKey": {
-						"type": "AzureKeyVaultSecret",
-						"store": {
-							"referenceName": "ls_dev_key_vault",
-							"type": "LinkedServiceReference"
-						},
-						"secretName": "adls2sadev"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_dev_key_vault')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ls_devADB')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "AzureDatabricks",
-				"typeProperties": {
-					"domain": "https://adb-1617961449375788.8.azuredatabricks.net",
-					"accessToken": {
-						"type": "AzureKeyVaultSecret",
-						"store": {
-							"referenceName": "ls_dev_key_vault",
-							"type": "LinkedServiceReference"
-						},
-						"secretName": "adb-dev-ws"
-					},
-					"existingClusterId": "[parameters('ls_devADB_properties_typeProperties_existingClusterId')]"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_dev_key_vault')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Kaggle_Json1')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_adls_param",
-					"type": "LinkedServiceReference"
+					"database": "default",
+					"table": "info_table"
 				},
-				"annotations": [],
-				"type": "Json",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"folderPath": "Unzip_Kaggle",
-						"fileSystem": "devdata"
-					}
-				},
-				"schema": {}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_adls_param')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/dsKaggleCopybinaryTOsink')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_adls_param",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "Binary",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": "HairLoss.zip",
-						"folderPath": "Kaggle",
-						"fileSystem": "devdata"
+				"schema": [
+					{
+						"name": "info_contributor",
+						"type": "string"
 					},
-					"compression": {
-						"type": "ZipDeflate"
+					{
+						"name": "info_date_created",
+						"type": "string"
+					},
+					{
+						"name": "info_description",
+						"type": "string"
+					},
+					{
+						"name": "info_url",
+						"type": "string"
+					},
+					{
+						"name": "info_version",
+						"type": "string"
+					},
+					{
+						"name": "info_year",
+						"type": "string"
 					}
-				}
+				]
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_adls_param')]"
+				"[concat(variables('factoryId'), '/linkedServices/AzureDatabricksDeltaLake1')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/dsKaggleParquet')]",
+			"name": "[concat(parameters('factoryName'), '/KaggleJsonToParquet')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -305,36 +316,12 @@
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobFSLocation",
-						"fileName": "Kaggle_HairLoss.Parquet",
-						"fileSystem": "raw"
+						"folderPath": "raw",
+						"fileSystem": "devdata"
 					},
 					"compressionCodec": "snappy"
 				},
 				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_adls_param')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/dsUnzipKaggleJson1')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_adls_param",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "Json",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"folderPath": "Unzip_Kaggle",
-						"fileSystem": "devdata"
-					}
-				},
-				"schema": {}
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/ls_adls_param')]"
@@ -462,7 +449,109 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/KaggleJsonToParquet')]",
+			"name": "[concat(parameters('factoryName'), '/Kaggle_Json1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_adls_param",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "Unzip_Kaggle",
+						"fileSystem": "devdata"
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls_param')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dsJson1Kaggle')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_Http_Kaggle",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "HttpServerLocation",
+						"relativeUrl": "api/v1/datasets/download/unidpro/hair-loss-male-norwood-scale/annotation.json"
+					},
+					"compression": {
+						"type": "ZipDeflate"
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_Http_Kaggle')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dsKaggleBinary')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_Http_Kaggle",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "HttpServerLocation",
+						"relativeUrl": "api/v1/datasets/download/unidpro/hair-loss-male-norwood-scale"
+					},
+					"compression": {
+						"type": "ZipDeflate"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_Http_Kaggle')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dsKaggleCopybinaryTOsink')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_adls_param",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "HairLoss.zip",
+						"folderPath": "Kaggle",
+						"fileSystem": "devdata"
+					},
+					"compression": {
+						"type": "ZipDeflate"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls_param')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dsKaggleParquet')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -475,8 +564,8 @@
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobFSLocation",
-						"folderPath": "raw",
-						"fileSystem": "devdata"
+						"fileName": "Kaggle_HairLoss.Parquet",
+						"fileSystem": "raw"
 					},
 					"compressionCodec": "snappy"
 				},
@@ -487,82 +576,61 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/df_Kaggle_Hairfall')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
+			"name": "[concat(parameters('factoryName'), '/dsUnzipKaggleJson1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"type": "MappingDataFlow",
+				"linkedServiceName": {
+					"referenceName": "ls_adls_param",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
 				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "KaggleJsonToTabular",
-								"type": "DatasetReference"
-							},
-							"name": "KaggleHairfallTransformation"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "KaggleJsonToParquet",
-								"type": "DatasetReference"
-							},
-							"name": "sinkKaggleJsonToParquet"
-						}
-					],
-					"transformations": [
-						{
-							"name": "flatten1"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          licenses as (name as string, id as integer, url as string)[],",
-						"          info as (contributor as string, date_created as string, description as string, url as string, version as string, year as string),",
-						"          categories as (id as integer, name as string, supercategory as string)[],",
-						"          images as (id as integer, width as integer, height as integer, file_name as string, license as integer, flickr_url as string, coco_url as string, date_captured as integer)[],",
-						"          annotations as string[]",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false,",
-						"     documentForm: 'documentPerLine') ~> KaggleHairfallTransformation",
-						"KaggleHairfallTransformation foldDown(unroll(),",
-						"     mapColumn(",
-						"          licenses,",
-						"          info,",
-						"          categories,",
-						"          images,",
-						"          annotations",
-						"     ),",
-						"     skipDuplicateMapInputs: false,",
-						"     skipDuplicateMapOutputs: false) ~> flatten1",
-						"flatten1 sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'parquet',",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> sinkKaggleJsonToParquet"
-					]
-				}
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "Unzip_Kaggle",
+						"fileSystem": "devdata"
+					}
+				},
+				"schema": {}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/KaggleJsonToTabular')]",
-				"[concat(variables('factoryId'), '/datasets/KaggleJsonToParquet')]"
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls_param')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/pl__Kaggle_copy_json')]",
+			"name": "[concat(parameters('factoryName'), '/ls_devADB')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricks",
+				"typeProperties": {
+					"domain": "https://adb-1617961449375788.8.azuredatabricks.net",
+					"accessToken": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "ls_dev_key_vault",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "adb-dev-ws"
+					},
+					"existingClusterId": "[parameters('ls_devADB_properties_typeProperties_existingClusterId')]"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_dev_key_vault')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/CopyDeltatable')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "Kaggle_HairLoass_Copy",
-						"description": "Kaggle_HairLoass_Copy of json to parquet",
+						"name": "CopyDeltaTableImageToInfo",
 						"type": "Copy",
 						"dependsOn": [],
 						"policy": {
@@ -575,120 +643,41 @@
 						"userProperties": [],
 						"typeProperties": {
 							"source": {
-								"type": "BinarySource",
-								"storeSettings": {
-									"type": "HttpReadSettings",
-									"requestMethod": "GET"
-								},
-								"formatSettings": {
-									"type": "BinaryReadSettings",
-									"compressionProperties": {
-										"type": "ZipDeflateReadSettings"
-									}
+								"type": "AzureDatabricksDeltaLakeSource",
+								"exportSettings": {
+									"type": "AzureDatabricksDeltaLakeExportCommand"
 								}
 							},
 							"sink": {
-								"type": "BinarySink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
+								"type": "AzureDatabricksDeltaLakeSink",
+								"preCopyScript": "TRUNCATE TABLE default.info_table",
+								"importSettings": {
+									"type": "AzureDatabricksDeltaLakeImportCommand"
 								}
 							},
-							"enableStaging": false
+							"enableStaging": true,
+							"stagingSettings": {
+								"linkedServiceName": {
+									"referenceName": "ls_adls_param",
+									"type": "LinkedServiceReference"
+								},
+								"path": "devdata/staging"
+							}
 						},
 						"inputs": [
 							{
-								"referenceName": "dsKaggleBinary",
+								"referenceName": "AzureDatabricksDeltaLakeDs_hair",
 								"type": "DatasetReference",
 								"parameters": {}
 							}
 						],
 						"outputs": [
 							{
-								"referenceName": "dsKaggleCopybinaryTOsink",
+								"referenceName": "DatabricksDeltaLakeDshairSink",
 								"type": "DatasetReference",
 								"parameters": {}
 							}
 						]
-					},
-					{
-						"name": "UnzipKaggle_HairLoss",
-						"type": "DatabricksNotebook",
-						"dependsOn": [
-							{
-								"activity": "Wait1",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"notebookPath": "/Users/vikashsoni07246@gmail.com/UnzipKaggle_HairLoss.zip"
-						},
-						"linkedServiceName": {
-							"referenceName": "ls_devADB",
-							"type": "LinkedServiceReference"
-						}
-					},
-					{
-						"name": "Wait1",
-						"type": "Wait",
-						"dependsOn": [
-							{
-								"activity": "Kaggle_HairLoass_Copy",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"waitTimeInSeconds": 10
-						}
-					},
-					{
-						"name": "DfKaggleJsonToParquet",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [
-							{
-								"activity": "UnzipKaggle_HairLoss",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "df_Kaggle_Hairfall",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"KaggleHairfallTransformation": {},
-									"sinkKaggleJsonToParquet": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
 					}
 				],
 				"policy": {
@@ -697,10 +686,9 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/dsKaggleBinary')]",
-				"[concat(variables('factoryId'), '/datasets/dsKaggleCopybinaryTOsink')]",
-				"[concat(variables('factoryId'), '/linkedServices/ls_devADB')]",
-				"[concat(variables('factoryId'), '/dataflows/df_Kaggle_Hairfall')]"
+				"[concat(variables('factoryId'), '/datasets/AzureDatabricksDeltaLakeDs_hair')]",
+				"[concat(variables('factoryId'), '/datasets/DatabricksDeltaLakeDshairSink')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls_param')]"
 			]
 		}
 	]

@@ -5,7 +5,16 @@
 		"factoryName": {
 			"value": "dev-adf-vikash"
 		},
+		"AzureDatabricksDeltaLake1_accessToken": {
+			"value": ""
+		},
+		"linkedService1_connectionString": {
+			"value": ""
+		},
 		"ls_Http_Kaggle_password": {
+			"value": ""
+		},
+		"ls_adls_param_accountKey": {
 			"value": ""
 		},
 		"ls_Http_Kaggle_properties_typeProperties_url": {
@@ -15,7 +24,7 @@
 			"value": "VikashSoni123"
 		},
 		"ls_adls_param_properties_typeProperties_url": {
-			"value": "https://adls2sadev.dfs.core.windows.net"
+			"value": "https://adls2sadev.dfs.core.windows.net/"
 		},
 		"ls_devADB_properties_typeProperties_existingClusterId": {
 			"value": "0705-064201-yaukw7ed"
