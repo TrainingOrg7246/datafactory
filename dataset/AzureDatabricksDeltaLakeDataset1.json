@@ -1,0 +1,57 @@
+{
+	"name": "AzureDatabricksDeltaLakeDataset1",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDatabricksDeltaLake1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureDatabricksDeltaLakeDataset",
+		"typeProperties": {
+			"database": "default",
+			"table": "images_table"
+		},
+		"schema": [
+			{
+				"name": "CustomerID",
+				"type": "integer"
+			},
+			{
+				"name": "ProductID",
+				"type": "string"
+			},
+			{
+				"name": "Quantity",
+				"type": "integer"
+			},
+			{
+				"name": "Price",
+				"type": "double"
+			},
+			{
+				"name": "TransactionDate",
+				"type": "string"
+			},
+			{
+				"name": "PaymentMethod",
+				"type": "string"
+			},
+			{
+				"name": "StoreLocation",
+				"type": "string"
+			},
+			{
+				"name": "ProductCategory",
+				"type": "string"
+			},
+			{
+				"name": "DiscountApplied",
+				"type": "double"
+			},
+			{
+				"name": "TotalAmount",
+				"type": "double"
+			}
+		]
+	}
+}
