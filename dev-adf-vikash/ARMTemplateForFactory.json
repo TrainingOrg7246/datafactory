@@ -23,6 +23,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'accountKey' of 'ls_adls_param'"
 		},
+		"AzureSqlDb_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'AzureSqlDb'"
+		},
 		"ls_Http_Kaggle_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://www.kaggle.com/"
@@ -46,6 +50,18 @@
 		"ls_dev_key_vault_properties_typeProperties_baseUrl": {
 			"type": "string",
 			"defaultValue": "https://Az-keyVault-dev.vault.azure.net/"
+		},
+		"AzureSqlDb_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "azsqlsvr1.database.windows.net"
+		},
+		"AzureSqlDb_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "AzSqlDb1"
+		},
+		"AzureSqlDb_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "Sqlserver1"
 		}
 	},
 	"variables": {
@@ -906,6 +922,28 @@
 				"[concat(variables('factoryId'), '/datasets/KaggleJsonToTabular')]",
 				"[concat(variables('factoryId'), '/datasets/KaggleJsonToParquet')]"
 			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlDb')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('AzureSqlDb_properties_typeProperties_server')]",
+					"database": "[parameters('AzureSqlDb_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('AzureSqlDb_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('AzureSqlDb_password')]"
+					}
+				}
+			},
+			"dependsOn": []
 		}
 	]
 }

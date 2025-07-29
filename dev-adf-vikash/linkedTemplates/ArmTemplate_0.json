@@ -23,6 +23,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'accountKey' of 'ls_adls_param'"
 		},
+		"AzureSqlDb_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'AzureSqlDb'"
+		},
 		"ls_Http_Kaggle_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://www.kaggle.com/"
@@ -42,6 +46,18 @@
 		"ls_dev_key_vault_properties_typeProperties_baseUrl": {
 			"type": "string",
 			"defaultValue": "https://Az-keyVault-dev.vault.azure.net/"
+		},
+		"AzureSqlDb_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "azsqlsvr1.database.windows.net"
+		},
+		"AzureSqlDb_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "AzSqlDb1"
+		},
+		"AzureSqlDb_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "Sqlserver1"
 		},
 		"ls_devADB_properties_typeProperties_existingClusterId": {
 			"type": "string",
@@ -197,6 +213,28 @@
 							"cleanup": false,
 							"customProperties": []
 						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlDb')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('AzureSqlDb_properties_typeProperties_server')]",
+					"database": "[parameters('AzureSqlDb_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('AzureSqlDb_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('AzureSqlDb_password')]"
 					}
 				}
 			},
@@ -621,74 +659,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/ls_dev_key_vault')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/CopyDeltatable')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "CopyDeltaTableImageToInfo",
-						"type": "Copy",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "AzureDatabricksDeltaLakeSource",
-								"exportSettings": {
-									"type": "AzureDatabricksDeltaLakeExportCommand"
-								}
-							},
-							"sink": {
-								"type": "AzureDatabricksDeltaLakeSink",
-								"preCopyScript": "TRUNCATE TABLE default.info_table",
-								"importSettings": {
-									"type": "AzureDatabricksDeltaLakeImportCommand"
-								}
-							},
-							"enableStaging": true,
-							"stagingSettings": {
-								"linkedServiceName": {
-									"referenceName": "ls_adls_param",
-									"type": "LinkedServiceReference"
-								},
-								"path": "devdata/staging"
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "AzureDatabricksDeltaLakeDs_hair",
-								"type": "DatasetReference",
-								"parameters": {}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "DatabricksDeltaLakeDshairSink",
-								"type": "DatasetReference",
-								"parameters": {}
-							}
-						]
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/AzureDatabricksDeltaLakeDs_hair')]",
-				"[concat(variables('factoryId'), '/datasets/DatabricksDeltaLakeDshairSink')]",
-				"[concat(variables('factoryId'), '/linkedServices/ls_adls_param')]"
 			]
 		}
 	]

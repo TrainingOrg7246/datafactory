@@ -17,6 +17,9 @@
 		"ls_adls_param_accountKey": {
 			"value": ""
 		},
+		"AzureSqlDb_password": {
+			"value": ""
+		},
 		"ls_Http_Kaggle_properties_typeProperties_url": {
 			"value": "https://www.kaggle.com/"
 		},
@@ -34,6 +37,15 @@
 		},
 		"ls_dev_key_vault_properties_typeProperties_baseUrl": {
 			"value": "https://Az-keyVault-dev.vault.azure.net/"
+		},
+		"AzureSqlDb_properties_typeProperties_server": {
+			"value": "azsqlsvr1.database.windows.net"
+		},
+		"AzureSqlDb_properties_typeProperties_database": {
+			"value": "AzSqlDb1"
+		},
+		"AzureSqlDb_properties_typeProperties_userName": {
+			"value": "Sqlserver1"
 		}
 	}
 }
